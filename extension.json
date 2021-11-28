@@ -1,0 +1,237 @@
+{
+  "name": "PracticeGroups",
+  "namemsg": "practicegroups-extensionname",
+  "version": "0.1.0",
+  "author": [
+    "Chris Rishel"
+  ],
+  "license-name": "GPL-3.0-or-later",
+  "url": "https://www.mediawiki.org/wiki/Extension:PracticeGroups",
+  "descriptionmsg": "practicegroups-desc",
+  "type": "other",
+  "requires": {
+    "MediaWiki": ">= 1.35.0",
+    "extensions": {
+      "Bootstrap": "*",
+      "BootstrapUI": "*",
+      "DatabaseClasses": "*"
+    }
+  },
+  "callback": "PracticeGroups\\PracticeGroups::init",
+  "config_prefix": "wg",
+  "config": {
+    "PracticeGroupsConfirmMatchingMWEmailOnVerify": {
+      "value": true
+    },
+    "PracticeGroupsDisableCategories": {
+      "value": true
+    },
+    "PracticeGroupsNotesAddAction": {
+      "value": true
+    },
+    "PracticeGroupsNotesBlacklistTitles": {
+      "value": [
+        "Main_Page"
+      ]
+    },
+    "PracticeGroupsNotesEnabledNamespaces": {
+      "value": [
+        "Main"
+      ]
+    },
+    "PracticeGroupsOtherNotesNamespaces": {
+      "value": [
+        "UserNotes"
+      ]
+    },
+    "PracticeGroupsHomepageTemplateTitle": {
+      "value": ""
+    }
+  },
+  "AuthManagerAutoConfig": {
+    "secondaryauth": {
+      "PracticeGroupsSecondaryAuthenticationProvider": {
+        "class": "PracticeGroups\\Auth\\PracticeGroupsSecondaryAuthenticationProvider",
+        "sort": 10
+      }
+    }
+  },
+  "AutoloadNamespaces": {
+    "PracticeGroups\\": "src/"
+  },
+  "AvailableRights": [
+    "practicegroups-databaseclass-practicegroup-create",
+    "practicegroups-databaseclass-practicegroup-edit",
+    "practicegroups-databaseclass-practicegroup-delete",
+    "practicegroups-databaseclass-practicegroupsuser-create",
+    "practicegroups-databaseclass-practicegroupsuser-edit",
+    "practicegroups-databaseclass-practicegroupsuser-delete",
+    "practicegroups-sysop"
+  ],
+  "Actions": {
+    "privacy": "PracticeGroups\\Action\\PrivacyAction"
+  },
+  "APIModules": {
+    "practicegroups": "PracticeGroups\\Api\\ApiPracticeGroups"
+  },
+  "Hooks": {
+    "ApiOpenSearchSuggest": "PracticeGroups\\Hook\\ApiOpenSearchSuggest::callback",
+    "APIQueryAfterExecute": "PracticeGroups\\Hook\\APIQueryAfterExecute::callback",
+    "BeforePageDisplay": "PracticeGroups\\Hook\\BeforePageDisplay::callback",
+    "CategoryViewer::generateLink": "PracticeGroups\\Hook\\CategoryViewer_generateLink::callback",
+    "ChangesListSpecialPageQuery": "PracticeGroups\\Hook\\ChangesListSpecialPageQuery::callback",
+    "ContribsPager::getQueryInfo": "PracticeGroups\\Hook\\ContribsPager_getQueryInfo::callback",
+    "GetDoubleUnderscoreIDs": "PracticeGroups\\Hook\\GetDoubleUnderscoreIDs::callback",
+    "getUserPermissionsErrors": "PracticeGroups\\Hook\\getUserPermissionsErrors::callback",
+    "LoadExtensionSchemaUpdates": "PracticeGroups\\Hook\\LoadExtensionSchemaUpdates::callback",
+    "LogEventsListLineEnding": "PracticeGroups\\Hook\\LogEventsListLineEnding::callback",
+    "MovePageIsValidMove": "PracticeGroups\\Hook\\MovePageIsValidMove::callback",
+    "MultiContentSave": "PracticeGroups\\Hook\\MultiContentSave::callback",
+    "OutputPageParserOutput": "PracticeGroups\\Hook\\OutputPageParserOutput::callback",
+    "PageMoveComplete": "PracticeGroups\\Hook\\PageMoveComplete::callback",
+    "PersonalUrls": "PracticeGroups\\Hook\\PersonalUrls::callback",
+    "PracticeGroupUserActivated": "PracticeGroups\\Hook\\PracticeGroupUserActivated::callback",
+    "SendWatchlistEmailNotification": "PracticeGroups\\Hook\\SendWatchlistEmailNotification::callback",
+    "SkinTemplateNavigation::Universal": "PracticeGroups\\Hook\\SkinTemplateNavigation_Universal::callback",
+    "SpecialNewpagesConditions": "PracticeGroups\\Hook\\SpecialNewpagesConditions::callback",
+    "ShowSearchHit": "PracticeGroups\\Hook\\ShowSearchHit::callback",
+    "SkinSubPageSubtitle": "PracticeGroups\\Hook\\SkinSubPageSubtitle::callback",
+    "TitleGetEditNotices": "PracticeGroups\\Hook\\TitleGetEditNotices::callback",
+    "userCan": "PracticeGroups\\Hook\\userCan::callback"
+  },
+  "MessagesDirs": {
+    "PracticeGroups": [
+      "i18n",
+      "i18n/api"
+    ]
+  },
+  "ExtensionMessagesFiles": {
+    "PracticeGroupsMagic": "src/PracticeGroups.i18n.magic.php"
+  },
+  "namespaces": [ {
+    "id": 7740,
+    "constant": "NS_PRACTICEGROUP",
+    "name": "PracticeGroup",
+    "subpages": true
+  },{
+    "id": 7741,
+    "constant": "NS_PRACTICEGROUP_TALK",
+    "name": "PracticeGroup_talk",
+    "subpages": true
+  } ],
+  "ResourceModules": {
+    "ext.practiceGroups.common": {
+      "scripts": [
+        "practiceGroups.common/practiceGroups.common.js"
+      ],
+      "styles": [
+        "practiceGroups.common/practiceGroups.common.less"
+      ],
+      "messages": [
+        "practicegroups-areyousure",
+        "practicegroups-cancel",
+        "practicegroups-close",
+        "practicegroups-email-verification-sent",
+        "practicegroups-error-emailnotaffiliated",
+        "practicegroups-error-emailnotvalid",
+        "practicegroups-error-failedvalidation",
+        "practicegroups-error-generic",
+        "practicegroups-error-notunique",
+        "practicegroups-error-requiredmissing",
+        "practicegroups-form-practicegroup-create-confirm",
+        "practicegroups-practicegroup-acceptinvitation-confirm",
+        "practicegroups-practicegroup-approverequest-confirm",
+        "practicegroups-practicegroup-cancelinvitation-confirm",
+        "practicegroups-practicegroup-cancelrequest-confirm",
+        "practicegroups-practicegroup-declineinvitation-confirm",
+        "practicegroups-practicegroup-demoteadmin-confirm",
+        "practicegroups-practicegroup-inviteuser-confirm",
+        "practicegroups-practicegroup-join-confirm",
+        "practicegroups-practicegroup-leave-confirm",
+        "practicegroups-practicegroup-promoteadmin-confirm",
+        "practicegroups-practicegroup-rejectrequest-confirm",
+        "practicegroups-practicegroup-removeuser-confirm",
+        "practicegroups-yes"
+      ]
+    },
+    "ext.practiceGroups.formEdit": {
+      "scripts": [
+        "practiceGroups.formEdit/practiceGroups.formEdit.js"
+      ],
+      "styles": [],
+      "dependencies": [
+        "ext.practiceGroups.common"
+      ],
+      "messages": []
+    },
+    "ext.practiceGroups.formJoinRequest": {
+      "scripts": [
+        "practiceGroups.formJoinRequest/practiceGroups.formJoinRequest.js"
+      ],
+      "styles": [],
+      "dependencies": [
+        "ext.practiceGroups.common"
+      ],
+      "messages": [
+        "practicegroups-form-joinrequest-submit-confirm"
+      ]
+    },
+    "ext.practiceGroups.dashboard": {
+      "scripts": [
+        "practiceGroups.dashboard/practiceGroups.dashboard.js"
+      ],
+      "styles": [],
+      "dependencies": [
+        "ext.practiceGroups.common",
+        "ext.practiceGroups.dataTables"
+      ],
+      "messages": [
+        "practicegroups-practicegroup-articles-create-dialog-existingpublicgrouparticles",
+        "practicegroups-practicegroup-articles-create-dialog-existingpublicgrouparticles-noresults",
+        "practicegroups-practicegroup-articles-create-dialog-existingpracticegrouparticles",
+        "practicegroups-practicegroup-articles-create-dialog-existingpracticegrouparticles-noresults",
+        "practicegroups-practicegroup-articles-create-dialog-header",
+        "practicegroups-practicegroup-articles-create-dialog-label",
+        "practicegroups-practicegroup-articles-create-dialog-help",
+        "practicegroups-practicegroup-articles-create-dialog-proceedbutton"
+      ]
+    },
+    "ext.practiceGroups.searchSuggest": {
+      "scripts": [
+        "practiceGroups.searchSuggest/practiceGroups.searchSuggest.js"
+      ],
+      "styles": [],
+      "dependencies": [
+        "mediawiki.searchSuggest"
+      ],
+      "messages": []
+    },
+    "ext.practiceGroups.special": {
+      "scripts": [
+        "practiceGroups.special/practiceGroups.special.js"
+      ],
+      "styles": [],
+      "dependencies": [
+        "ext.practiceGroups.common"
+      ],
+      "messages": []
+    },
+    "ext.practiceGroups.dataTables": {
+      "scripts": [
+        "DataTables/datatables.min.js"
+      ],
+      "styles": [
+        "DataTables/datatables.min.css",
+        "DataTables/datatables.fix.css"
+      ]
+    }
+  },
+  "ResourceFileModulePaths": {
+    "localBasePath": "modules",
+    "remoteExtPath": "PracticeGroups/modules"
+  },
+  "SpecialPages": {
+    "PracticeGroups": "PracticeGroups\\Special\\SpecialPracticeGroups"
+  },
+  "manifest_version": 2
+}
