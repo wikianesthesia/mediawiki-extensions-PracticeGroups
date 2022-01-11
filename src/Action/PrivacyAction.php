@@ -17,11 +17,6 @@ class PrivacyAction extends Action {
         return 'privacy';
     }
 
-    public function onSubmit( $data ) {
-        var_dump($data);
-        die();
-    }
-
     public function show() {
         // This will throw exceptions if there's a problem
         $this->checkCanExecute( $this->getUser() );
