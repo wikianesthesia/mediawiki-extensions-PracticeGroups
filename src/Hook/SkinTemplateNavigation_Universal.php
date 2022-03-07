@@ -18,7 +18,7 @@ class SkinTemplateNavigation_Universal {
             return;
         }
 
-        if( $skinTemplate->getUser()->isLoggedIn() ) {
+        if( $skinTemplate->getUser()->isRegistered() ) {
             $practiceGroupsUser = $practiceGroup->getPracticeGroupsUserForUser( $skinTemplate->getUser()->getId() );
 
             if( $practiceGroupsUser && $practiceGroupsUser->isAdmin() ) {
@@ -44,7 +44,7 @@ class SkinTemplateNavigation_Universal {
 
 
 
-        if( $skinTemplate->getUser()->isLoggedIn() ) {
+        if( $skinTemplate->getUser()->isRegistered() ) {
             $title = $skinTemplate->getRelevantTitle();
 
             if( in_array( $title->getNamespace(), PracticeGroups::getPracticeGroupsNamespaces() ) ) {

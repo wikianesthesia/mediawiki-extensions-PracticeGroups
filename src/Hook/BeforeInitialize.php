@@ -17,7 +17,7 @@ class BeforeInitialize {
 
         if( PracticeGroups::isTitlePracticeGroupArticle( $title ) &&
             !PracticeGroups::userCanReadPracticeGroupTitle( $title ) &&
-            !$user->isLoggedIn() ) {
+            !$user->isRegistered() ) {
             throw new UserNotLoggedIn();
         }
     }

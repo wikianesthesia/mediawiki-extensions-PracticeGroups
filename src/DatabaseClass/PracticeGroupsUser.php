@@ -256,7 +256,7 @@ class PracticeGroupsUser extends DatabaseClass {
 
         $myUser = RequestContext::getMain()->getUser();
 
-        if( !$myUser->isLoggedIn() ) {
+        if( !$myUser->isRegistered() ) {
             $result->fatal( $genericErrorMessage );
 
             return $result;
@@ -759,7 +759,7 @@ class PracticeGroupsUser extends DatabaseClass {
                     return $result;
                 }
             }
-        } elseif( $action === STATIC::ACTION_DELETE ) {
+        } elseif( $action === static::ACTION_DELETE ) {
             # The valid cases for deletion are:
             # - A user deletes themselves from a practice group
             # - A user is deleted from a practice group by a practice group administrator

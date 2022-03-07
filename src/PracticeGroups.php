@@ -121,7 +121,7 @@ class PracticeGroups {
 
         $user = RequestContext::getMain()->getUser();
 
-        if( !$user || !$user->isLoggedIn() || !$practiceGroup->isUserActiveMember( $user->getId() ) ) {
+        if( !$user || !$user->isRegistered() || !$practiceGroup->isUserActiveMember( $user->getId() ) ) {
             return false;
         }
 
@@ -171,7 +171,7 @@ class PracticeGroups {
 
         $user = RequestContext::getMain()->getUser();
 
-        if( $user->isLoggedIn() ) {
+        if( $user->isRegistered() ) {
             $practiceGroupsUsers = PracticeGroupsUser::getAllForUser( $user->getId() );
 
             foreach( $practiceGroupsUsers as $practiceGroupsUser ) {
@@ -503,7 +503,7 @@ class PracticeGroups {
 
         $myUser = RequestContext::getMain()->getUser();
 
-        if( !$myUser->isLoggedIn() ) {
+        if( !$myUser->isRegistered() ) {
             return false;
         }
 
@@ -549,7 +549,7 @@ class PracticeGroups {
             $mainArticleTitle = self::getMainArticleTitle( $mainArticleTitle );
         }
 
-        if( !$user->isLoggedIn()
+        if( !$user->isRegistered()
             || !self::canTitleHavePracticeGroupArticle( $mainArticleTitle )
             || ( self::isTitlePracticeGroupArticle( $title ) && !$title->isSubpage() ) ) {
             return;

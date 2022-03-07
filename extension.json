@@ -97,8 +97,7 @@
     "SpecialNewpagesConditions": "PracticeGroups\\Hook\\SpecialNewpagesConditions::callback",
     "ShowSearchHit": "PracticeGroups\\Hook\\ShowSearchHit::callback",
     "SkinSubPageSubtitle": "PracticeGroups\\Hook\\SkinSubPageSubtitle::callback",
-    "TitleGetEditNotices": "PracticeGroups\\Hook\\TitleGetEditNotices::callback",
-    "userCan": "PracticeGroups\\Hook\\userCan::callback"
+    "TitleGetEditNotices": "PracticeGroups\\Hook\\TitleGetEditNotices::callback"
   },
   "MessagesDirs": {
     "PracticeGroups": [

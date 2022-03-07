@@ -211,7 +211,7 @@ class SpecialPracticeGroups extends SpecialPage {
 
                 $nameHtml = (string) $practiceGroup;
 
-                if( $this->getUser()->isLoggedIn() && $practiceGroup->canUserView( $this->getUser()->getId() ) ) {
+                if( $this->getUser()->isRegistered() && $practiceGroup->canUserView( $this->getUser()->getId() ) ) {
                     # Show name as link
                     $nameHtml = $linkRenderer->makeKnownLink( $practiceGroup->getDashboardTitle(), (string) $practiceGroup );
                 }
@@ -231,7 +231,7 @@ class SpecialPracticeGroups extends SpecialPage {
 
                 $buttons = '';
 
-                if( $this->getUser()->isLoggedIn()
+                if( $this->getUser()->isRegistered()
                     && !$practiceGroup->getPracticeGroupsUserForUser( $this->getUser()->getId() ) ) {
                     if( $practiceGroup->canJoinByPublic() ) {
                         $buttons .= PracticeGroups::getMembershipButtonHtml( 'join', 0, $practiceGroup->getId() );
@@ -300,7 +300,7 @@ class SpecialPracticeGroups extends SpecialPage {
 
         $html .= Html::element( 'h4', [], wfMessage( 'practicegroups-mypracticegroups' )->text() );
 
-        if( !$this->getUser()->isLoggedIn() ) {
+        if( !$this->getUser()->isRegistered() ) {
             $html .= wfMessage(
                 'practicegroups-loginformypracticegroups',
                 $linkRenderer->makeLink( Title::newFromText( 'Special:UserLogin' ), wfMessage( 'practicegroups-login' )->text(), [], [ 'returnto' => $this->getPageTitle()->getFullText() ] )
@@ -419,7 +419,7 @@ class SpecialPracticeGroups extends SpecialPage {
         $out = $this->getOutput();
         $linkRenderer = MediaWikiServices::getInstance()->getLinkRenderer();
 
-        if( !$this->getUser()->isLoggedIn() ) {
+        if( !$this->getUser()->isRegistered() ) {
             $this->requireLogin();
         } elseif( !PracticeGroup::hasRightGeneric( 'create' ) ) {
             $errorHtml = BootstrapUI::alertWidget( [
@@ -444,7 +444,7 @@ class SpecialPracticeGroups extends SpecialPage {
     private function showJoinRequestForm( PracticeGroup $practiceGroup ) {
         $out = $this->getOutput();
 
-        if( !$this->getUser()->isLoggedIn() ) {
+        if( !$this->getUser()->isRegistered() ) {
             $this->requireLogin();
         } elseif( $practiceGroup->getPracticeGroupsUserForUser( $this->getUser()->getId() ) ) {
             $errorHtml = BootstrapUI::alertWidget( [

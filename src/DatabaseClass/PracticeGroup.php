@@ -496,7 +496,7 @@ class PracticeGroup extends DatabaseClass {
 
         $myUser = RequestContext::getMain()->getUser();
 
-        if( !$myUser->isLoggedIn() ) {
+        if( !$myUser->isRegistered() ) {
             # All actions require a user to be logged in
             $result->fatal( $genericErrorMessage );
 
@@ -631,7 +631,7 @@ class PracticeGroup extends DatabaseClass {
         } else {
             $user = $user ?? RequestContext::getMain()->getUser();
 
-            if( $user->isLoggedIn() && $this->isUserActiveMember( $user->getId() ) ) {
+            if( $user->isRegistered() && $this->isUserActiveMember( $user->getId() ) ) {
                 return true;
             }
         }

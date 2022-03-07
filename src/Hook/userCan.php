@@ -24,7 +24,7 @@ class userCan {
     public static function callback( Title $title, User $user, $action, &$result ) {
         if( in_array( $title->getNamespace(), PracticeGroups::getPracticeGroupsNamespaces() )
             && $title->isSubpage()
-            && $user->isLoggedIn()) {
+            && $user->isRegistered()) {
             $practiceGroup = PracticeGroup::getFromDBKey( $title->getRootText() );
 
             if( $practiceGroup ) {

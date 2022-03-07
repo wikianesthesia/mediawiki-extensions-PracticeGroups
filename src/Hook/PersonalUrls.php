@@ -10,7 +10,7 @@ class PersonalUrls {
     public static function callback( array &$personal_urls, Title $title, SkinTemplate $skin ) {
         $user = $skin->getUser();
 
-        if( !$user->isLoggedIn() ) {
+        if( !$user->isRegistered() ) {
             return;
         }
 

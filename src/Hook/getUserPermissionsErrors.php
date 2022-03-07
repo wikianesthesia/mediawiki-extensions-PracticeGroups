@@ -30,7 +30,7 @@ class getUserPermissionsErrors {
                 }
             }
 
-            if( !$user->isLoggedIn() ) {
+            if( !$user->isRegistered() ) {
                 $result = false;
 
                 return false;

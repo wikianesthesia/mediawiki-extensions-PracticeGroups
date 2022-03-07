@@ -31,7 +31,7 @@ class PracticeGroupFormEdit extends PracticeGroupForm {
         if( $practiceGroup ) {
             $user = $out->getUser();
 
-            if( !$user->isLoggedIn() ) {
+            if( !$user->isRegistered() ) {
                 return $html;
             }
 
