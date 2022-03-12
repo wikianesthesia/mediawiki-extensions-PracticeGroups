@@ -84,7 +84,7 @@ class PracticeGroup extends DatabaseClass {
         'primaryKey' => 'practicegroup_id',
         'relationships' => [ [
                 'propertyName' => 'practiceGroupsUserIds',
-                'autoload' => true,
+                'autoload' => false,
                 'relatedClassName' => PracticeGroupsUser::class,
                 'relatedPropertyName' => 'practicegroup_id',
                 'relationshipType' => DatabaseClass::RELATIONSHIP_MANY_TO_ONE
@@ -102,6 +102,8 @@ class PracticeGroup extends DatabaseClass {
             [ 'name_short' ]
         ]
     ];
+
+    protected static $myPracticeGroupsUser;
 
     /**
      * @return string
@@ -279,34 +281,23 @@ class PracticeGroup extends DatabaseClass {
      * @return PracticeGroupsUser[]|false
      */
     public function getActivePracticeGroupsUsers() {
-        $activePracticeGroupsUsers = [];
-
-        $allPracticeGroupsUsers = $this->getAllPracticeGroupsUsers();
-
-        foreach( $allPracticeGroupsUsers as $id => $practiceGroupsUser ) {
-            if( $practiceGroupsUser->isActive() ) {
-                $activePracticeGroupsUsers[ $id ] = $practiceGroupsUser;
-            }
-        }
-
-        return $activePracticeGroupsUsers;
+        return static::sortPracticeGroupsUsers(
+            PracticeGroupsUser::getAll( [
+                'practicegroup_id' => $this->getValue( 'practicegroup_id' ),
+                'active_since > 0'
+            ] ) );
     }
 
     /**
      * @return PracticeGroupsUser[]|false
      */
     public function getAdminPracticeGroupsUsers() {
-        $adminPracticeGroupsUsers = [];
-
-        $allPracticeGroupsUsers = $this->getAllPracticeGroupsUsers();
-
-        foreach( $allPracticeGroupsUsers as $id => $practiceGroupsUser ) {
-            if( $practiceGroupsUser->isAdmin() ) {
-                $adminPracticeGroupsUsers[ $id ] = $practiceGroupsUser;
-            }
-        }
-
-        return $adminPracticeGroupsUsers;
+        return static::sortPracticeGroupsUsers(
+            PracticeGroupsUser::getAll( [
+                'practicegroup_id' => $this->getValue( 'practicegroup_id' ),
+                'active_since > 0',
+                'admin > 0'
+            ] ) );
     }
 
     /**
@@ -322,17 +313,7 @@ class PracticeGroup extends DatabaseClass {
     public function getAllPracticeGroupsUsers() {
         $allPracticeGroupsUsers = static::getObjectsForIds( PracticeGroupsUser::class, $this->getValue( 'practiceGroupsUserIds' ) );
 
-        uasort( $allPracticeGroupsUsers, function ( PracticeGroupsUser $a, PracticeGroupsUser $b ) {
-            if( $a->isAdmin() && !$b->isAdmin() ) {
-                return -1;
-            } elseif( !$a->isAdmin() && $b->isAdmin() ) {
-                return 1;
-            } else {
-                return strnatcasecmp( $a->getUser()->getRealName(), $b->getUser()->getRealName() );
-            }
-        } );
-
-        return $allPracticeGroupsUsers;
+        return static::sortPracticeGroupsUsers( $allPracticeGroupsUsers );
     }
 
     public function getArticles() {
@@ -408,34 +389,23 @@ class PracticeGroup extends DatabaseClass {
      * @return PracticeGroupsUser[]|false
      */
     public function getInvitedPracticeGroupsUsers() {
-        $invitedPracticeGroupsUsers = [];
-
-        $allPracticeGroupsUsers = $this->getAllPracticeGroupsUsers();
-
-        foreach( $allPracticeGroupsUsers as $id => $practiceGroupsUser ) {
-            if( $practiceGroupsUser->isInvited() ) {
-                $invitedPracticeGroupsUsers[ $id ] = $practiceGroupsUser;
-            }
-        }
-
-        return $invitedPracticeGroupsUsers;
+        return static::sortPracticeGroupsUsers(
+            PracticeGroupsUser::getAll( [
+                'practicegroup_id' => $this->getValue( 'practicegroup_id' ),
+                'active_since' => 0,
+                'invited_since > 0'
+        ] ) );
     }
 
     /**
      * @return PracticeGroupsUser[]|false
      */
     public function getPendingPracticeGroupsUsers() {
-        $pendingPracticeGroupsUsers = [];
-
-        $allPracticeGroupsUsers = $this->getAllPracticeGroupsUsers();
-
-        foreach( $allPracticeGroupsUsers as $id => $practiceGroupsUser ) {
-            if( $practiceGroupsUser->isPending() ) {
-                $pendingPracticeGroupsUsers[ $id ] = $practiceGroupsUser;
-            }
-        }
-
-        return $pendingPracticeGroupsUsers;
+        return static::sortPracticeGroupsUsers(
+            PracticeGroupsUser::getAll( [
+                'practicegroup_id' => $this->getValue( 'practicegroup_id' ),
+                'active_since' => 0
+        ] ) );
     }
 
     /**
@@ -443,16 +413,16 @@ class PracticeGroup extends DatabaseClass {
      * @return false|PracticeGroupsUser
      */
     public function getPracticeGroupsUserForEmail( string $email ) {
-        # TODO this is expensive
-        $practiceGroupsUsers = $this->getAllPracticeGroupsUsers();
+        $practiceGroupsUser = PracticeGroupsUser::getAll( [
+            'practicegroup_id' => $this->getValue( 'practicegroup_id' ),
+            'affiliated_email' => $email
+        ] );
 
-        foreach( $practiceGroupsUsers as $practiceGroupsUser ) {
-            if( strtolower( $practiceGroupsUser->getAffiliatedEmail() ) == strtolower( $email ) ) {
-                return $practiceGroupsUser;
-            }
+        if( $practiceGroupsUser ) {
+            $practiceGroupsUser = array_shift( $practiceGroupsUser );
         }
 
-        return false;
+        return $practiceGroupsUser;
     }
 
     /**
@@ -460,33 +430,38 @@ class PracticeGroup extends DatabaseClass {
      * @return false|PracticeGroupsUser
      */
     public function getPracticeGroupsUserForUser( int $user_id ) {
-        # TODO this is expensive
-        $practiceGroupsUsers = $this->getAllPracticeGroupsUsers();
+        $isMyUser = RequestContext::getMain()->getUser()->isRegistered() && $user_id == RequestContext::getMain()->getUser()->getId();
 
-        foreach( $practiceGroupsUsers as $practiceGroupsUser ) {
-            if( $practiceGroupsUser->getUserId() == $user_id ) {
-                return $practiceGroupsUser;
-            }
+        if( $isMyUser && isset( static::$myPracticeGroupsUser ) ) {
+            return static::$myPracticeGroupsUser;
         }
 
-        return false;
+        $practiceGroupsUser = PracticeGroupsUser::getAll( [
+            'practicegroup_id' => $this->getValue( 'practicegroup_id' ),
+            'user_id' => $user_id
+        ] );
+
+        if( $practiceGroupsUser ) {
+            $practiceGroupsUser = array_shift( $practiceGroupsUser );
+        }
+
+        if( $isMyUser ) {
+            static::$myPracticeGroupsUser = $practiceGroupsUser;
+        }
+
+        return $practiceGroupsUser;
     }
 
     /**
      * @return PracticeGroupsUser[]|false
      */
     public function getRequestedPracticeGroupsUsers() {
-        $requestedPracticeGroupsUsers = [];
-
-        $allPracticeGroupsUsers = $this->getAllPracticeGroupsUsers();
-
-        foreach( $allPracticeGroupsUsers as $id => $practiceGroupsUser ) {
-            if( $practiceGroupsUser->isRequested() ) {
-                $requestedPracticeGroupsUsers[ $id ] = $practiceGroupsUser;
-            }
-        }
-
-        return $requestedPracticeGroupsUsers;
+        return static::sortPracticeGroupsUsers(
+            PracticeGroupsUser::getAll( [
+                'practicegroup_id' => $this->getValue( 'practicegroup_id' ),
+                'active_since' => 0,
+                'requested_since > 0'
+        ] ) );
     }
 
     public function hasRight( string $action ): Status {
@@ -637,5 +612,23 @@ class PracticeGroup extends DatabaseClass {
         }
 
         return false;
+    }
+
+    protected static function sortPracticeGroupsUsers( array $practiceGroupsUsers = [] ) {
+        if( !is_array( $practiceGroupsUsers ) ) {
+            return false;
+        }
+
+        uasort( $practiceGroupsUsers, function ( PracticeGroupsUser $a, PracticeGroupsUser $b ) {
+            if( $a->isAdmin() && !$b->isAdmin() ) {
+                return -1;
+            } elseif( !$a->isAdmin() && $b->isAdmin() ) {
+                return 1;
+            } else {
+                return strnatcasecmp( $a->getUser()->getRealName(), $b->getUser()->getRealName() );
+            }
+        } );
+
+        return $practiceGroupsUsers;
     }
 }
