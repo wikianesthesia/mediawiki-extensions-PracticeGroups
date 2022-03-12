@@ -5,11 +5,13 @@ namespace PracticeGroups;
 use BootstrapUI\BootstrapUI;
 use CommentStoreComment;
 use Html;
+use MediaWiki\Logger\LoggerFactory;
 use MediaWiki\MediaWikiServices;
 use OutputPage;
 use PracticeGroups\DatabaseClass\PracticeGroup;
 use PracticeGroups\DatabaseClass\PracticeGroupsPageSetting;
 use PracticeGroups\DatabaseClass\PracticeGroupsUser;
+use Psr\Log\LoggerInterface;
 use RequestContext;
 use Status;
 use MediaWiki\Storage\SlotRecord;
@@ -233,6 +235,13 @@ class PracticeGroups {
 
     public static function getExtensionName(): string {
         return self::EXTENSION_NAME;
+    }
+
+    /**
+     * @return LoggerInterface
+     */
+    public static function getLogger(): LoggerInterface {
+        return LoggerFactory::getInstance( static::getExtensionName() );
     }
 
     /**

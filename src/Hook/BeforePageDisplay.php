@@ -28,7 +28,7 @@ class BeforePageDisplay {
             return;
         }
 
-        if( $title->getNamespace() == NS_PRACTICEGROUP ) {
+        if( $title->getNamespace() === NS_PRACTICEGROUP ) {
             if( !$title->isSubpage() ) {
                 $practiceGroupPage = new PracticeGroupDashboard( $practiceGroup, $out );
 
@@ -36,7 +36,7 @@ class BeforePageDisplay {
             } else {
                 $out->setPageTitle( PracticeGroups::getPracticeGroupArticleDisplayTitle( PracticeGroups::getMainArticleTitle( $title )->getText(), $practiceGroup ) );
             }
-        } elseif( $title->getNamespace() == NS_PRACTICEGROUP_TALK ) {
+        } elseif( $title->getNamespace() === NS_PRACTICEGROUP_TALK ) {
             if( $title->isSubpage() ) {
                 $out->setPageTitle( wfMessage( 'practicegroups-talk-articletitle', PracticeGroups::getMainArticleTitle( $title )->getText(), $practiceGroup->getShortName() )->plain() );
             } else {
