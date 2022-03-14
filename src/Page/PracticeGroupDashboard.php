@@ -39,11 +39,13 @@ class PracticeGroupDashboard {
     }
 
     public function execute() {
+        global $wgPracticeGroupsEmailMaxRate;
+
         $out = $this->getOutput();
 
         $title = $out->getTitle();
 
-        if( !$this->practiceGroup ) {
+        if( !$this->practiceGroup || $title->isSubpage() ) {
             return;
         }
 
@@ -51,18 +53,16 @@ class PracticeGroupDashboard {
             'ext.practiceGroups.dashboard',
         ] );
 
-        if( $title->isSubpage() ) {
+        $out->addJsConfigVars( 'wgPracticeGroupsEmailMaxRate', $wgPracticeGroupsEmailMaxRate );
 
-        } else {
-            $out->enableClientCache( false );
-            $out->setPageTitle( (string) $this->practiceGroup );
+        $out->enableClientCache( false );
+        $out->setPageTitle( (string) $this->practiceGroup );
 
-            # Don't show the tabs if we're on a mediawiki action page
-            if( !$out->getRequest()->getText( 'action' ) ) {
-                static::setTabs( $out );
+        # Don't show the tabs if we're on a mediawiki action page
+        if( !$out->getRequest()->getText( 'action' ) ) {
+            static::setTabs( $out );
 
-                PracticeGroups::wrapRenderShield( $out );
-            }
+            PracticeGroups::wrapRenderShield( $out );
         }
     }
 
@@ -423,6 +423,14 @@ class PracticeGroupDashboard {
 
             $requestedPracticeGroupsUsersHtml .= Html::closeElement( 'div' );
             $requestedPracticeGroupsUsersHtml .= Html::closeElement( 'div' );
+
+            $requestedPracticeGroupsUsersHtml .= BootstrapUI::buttonWidget( [
+                'id' => 'practicegroup-massinvite-button',
+                'icon' => 'fas fa-user-friends',
+                'label' => wfMessage( 'practicegroups-practicegroup-massinvite-button' )->text()
+            ] );
+
+            $requestedPracticeGroupsUsersHtml .= '<br/>';
 
             $tabMembersHtml .= $requestedPracticeGroupsUsersHtml;
 

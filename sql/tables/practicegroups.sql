@@ -3,6 +3,8 @@ CREATE TABLE /*_*/practicegroups (
   `dbkey` VARCHAR(25) NOT NULL,
   `name_full` VARCHAR(100) NOT NULL,
   `name_short` VARCHAR(25) NOT NULL,
+  `color_primary` VARCHAR(25) NULL,
+  `color_secondary` VARCHAR(25) NULL,
   `view_by_public` TINYINT(1) NOT NULL DEFAULT 0,
   `join_by_public` TINYINT(1) NOT NULL DEFAULT 0,
   `any_member_add_user` TINYINT(1) NOT NULL DEFAULT 0,

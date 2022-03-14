@@ -16,6 +16,8 @@
             formData.dbkey = $( '#' + mw.practiceGroups.formEdit.formId + '-dbkey' ).val();
             formData.name_full = $( '#' + mw.practiceGroups.formEdit.formId + '-namefull' ).val();
             formData.name_short = $( '#' + mw.practiceGroups.formEdit.formId + '-nameshort' ).val();
+            formData.color_primary = $( '#' + mw.practiceGroups.formEdit.formId + '-colorprimary' ).val();
+            formData.color_secondary = $( '#' + mw.practiceGroups.formEdit.formId + '-colorsecondary' ).val();
 
             if( $( "input[name='view_by_public']:checked" ).val() == 1 ) {
                 formData.view_by_public = '1';
@@ -99,6 +101,30 @@
                 );
             } ).on( 'change', function( event ) {
                 var fieldName = 'dbkey';
+
+                mw.practiceGroups.formEdit.validateRemote( function( invalidFields ) {
+                    if( invalidFields.hasOwnProperty( fieldName ) ) {
+                        mw.practiceGroups.common.updateFieldValidation( $( event.target ), false, invalidFields[ fieldName ] );
+                    } else {
+                        mw.practiceGroups.common.updateFieldValidation( $( event.target ), true );
+                    }
+                } );
+            } );
+
+            $( '#form-practicegroup-colorprimary' ).on( 'change', function( event ) {
+                var fieldName = 'color_primary';
+
+                mw.practiceGroups.formEdit.validateRemote( function( invalidFields ) {
+                    if( invalidFields.hasOwnProperty( fieldName ) ) {
+                        mw.practiceGroups.common.updateFieldValidation( $( event.target ), false, invalidFields[ fieldName ] );
+                    } else {
+                        mw.practiceGroups.common.updateFieldValidation( $( event.target ), true );
+                    }
+                } );
+            } );
+
+            $( '#form-practicegroup-colorsecondary' ).on( 'change', function( event ) {
+                var fieldName = 'color_secondary';
 
                 mw.practiceGroups.formEdit.validateRemote( function( invalidFields ) {
                     if( invalidFields.hasOwnProperty( fieldName ) ) {

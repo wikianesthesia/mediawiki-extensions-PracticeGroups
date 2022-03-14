@@ -69,6 +69,14 @@ class ApiPracticeGroupsEditValidate extends ApiPracticeGroupsBaseGet {
                 ApiBase::PARAM_REQUIRED => false,
                 ApiBase::PARAM_TYPE => 'string'
             ],
+            'color_primary' => [
+                ApiBase::PARAM_REQUIRED => false,
+                ApiBase::PARAM_TYPE => 'string'
+            ],
+            'color_secondary' => [
+                ApiBase::PARAM_REQUIRED => false,
+                ApiBase::PARAM_TYPE => 'string'
+            ],
             'view_by_public' => [
                 ApiBase::PARAM_REQUIRED => false,
                 ApiBase::PARAM_TYPE => 'boolean'

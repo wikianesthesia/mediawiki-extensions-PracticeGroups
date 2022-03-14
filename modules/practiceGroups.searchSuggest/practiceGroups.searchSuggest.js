@@ -9,8 +9,8 @@
             .replace( /-/g, '\\x2d' );
     }
 
-    function getDisplayTitle( prefixedTitle ) {
-        var regexpPracticeGroupTitle = /PracticeGroup:([^\/]+)\/(.*)/;
+    function getPracticeGroupTitleHtml( prefixedTitle, query, highlightClass ) {
+        var regexpPracticeGroupTitle = /PracticeGroup:([^\/]+)(\/(.*))?/;
 
         var regexpMatches = prefixedTitle.match( regexpPracticeGroupTitle );
 
@@ -18,7 +18,41 @@
             return false;
         }
 
-        return regexpMatches[ 2 ] + ' (' + regexpMatches[ 1 ] + ')';
+        var practiceGroup = regexpMatches[ 1 ];
+        var displayTitle = regexpMatches[ 3 ] !== undefined ? regexpMatches[ 3 ] : regexpMatches[ 1 ];
+
+        var highlightRegexp = new RegExp( '(' + escapeQuery(query) + ')', 'i' );
+        displayTitle = displayTitle.replace( highlightRegexp, '<span class="' + highlightClass + '">$1</span>' );
+
+        var badgeAttribs = {
+            'class': 'badge practicegroups-searchresults-badge'
+        };
+
+        var badgeStyle = '';
+
+        if( $( '#practicegroup-data-' + practiceGroup ).length ) {
+            var colorPrimary = $( '#practicegroup-data-' + practiceGroup ).attr( 'data-colorprimary' );
+
+            if( colorPrimary ) {
+                badgeStyle += 'background-color: ' + colorPrimary + ';';
+            }
+
+            var colorSecondary = $( '#practicegroup-data-' + practiceGroup ).attr( 'data-colorsecondary' );
+
+            if( colorSecondary ) {
+                badgeStyle += 'color: ' + colorSecondary + ';';
+            }
+        }
+
+        if( badgeStyle ) {
+            badgeAttribs[ 'style' ] = badgeStyle;
+        }
+
+        var $practiceGroupBadge = $( '<h6>', {} ).append(
+            $( '<span>', badgeAttribs ).append( practiceGroup )
+        );
+
+        return $practiceGroupBadge[0].innerHTML + displayTitle;
     }
 
     function titleWidgetHandler( data ) {
@@ -28,14 +62,10 @@
                 var query = data.query;
 
                 $( '.mw-widget-titleWidget-menu > .mw-widget-titleOptionWidget a' ).each( function() {
-                    var displayTitle = getDisplayTitle( $( this ).text() );
+                    var practiceGroupTitleHtml = getPracticeGroupTitleHtml( $( this ).text(), query, 'oo-ui-labelElement-label-highlight' );
 
-                    if( displayTitle ) {
-                        var highlightRegexp = new RegExp( '(' + escapeQuery(query) + ')', 'i' );
-
-                        displayTitle = displayTitle.replace( highlightRegexp, '<span class="oo-ui-labelElement-label-highlight">$1</span>' );
-
-                        $( this ).html( displayTitle );
+                    if( practiceGroupTitleHtml ) {
+                        $( this ).html( practiceGroupTitleHtml );
                     }
                 } );
             }, 1 );
@@ -47,14 +77,10 @@
             var query = data.query;
 
             $( '.suggestions-result' ).each( function() {
-                var displayTitle = getDisplayTitle( $( this ).text() );
+                var practiceGroupTitleHtml = getPracticeGroupTitleHtml( $( this ).text(), query, 'highlight' );
 
-                if( displayTitle ) {
-                    var highlightRegexp = new RegExp( '(' + escapeQuery(query) + ')', 'i' );
-
-                    displayTitle = displayTitle.replace( highlightRegexp, '<span class="highlight">$1</span>' );
-
-                    $( this ).html( displayTitle );
+                if( practiceGroupTitleHtml ) {
+                    $( this ).html( practiceGroupTitleHtml );
                 }
             } );
         }

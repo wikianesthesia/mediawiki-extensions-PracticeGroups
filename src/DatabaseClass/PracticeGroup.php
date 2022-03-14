@@ -38,6 +38,16 @@ class PracticeGroup extends DatabaseClass {
             'type' => DatabaseClass::TYPE_STRING,
             'validator' => self::class . '::isValidNameShort'
         ], [
+            'name' => 'color_primary',
+            'size' => 25,
+            'source' => DatabaseClass::SOURCE_FIELD,
+            'type' => DatabaseClass::TYPE_COLOR
+        ], [
+            'name' => 'color_secondary',
+            'size' => 25,
+            'source' => DatabaseClass::SOURCE_FIELD,
+            'type' => DatabaseClass::TYPE_COLOR
+        ], [
             'name' => 'view_by_public',
             'defaultValue' => 0,
             'source' => DatabaseClass::SOURCE_FIELD,
@@ -376,6 +386,20 @@ class PracticeGroup extends DatabaseClass {
         }
 
         return $dashboardTitle->getPrefixedDBkey();
+    }
+
+    /**
+     * @return string
+     */
+    public function getPrimaryColor(): string {
+        return (String) $this->getValue( 'color_primary' );
+    }
+
+    /**
+     * @return string
+     */
+    public function getSecondaryColor(): string {
+        return (String) $this->getValue( 'color_secondary' );
     }
 
     /**

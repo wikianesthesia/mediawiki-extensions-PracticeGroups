@@ -32,6 +32,8 @@ class ApiPracticeGroupsEdit extends ApiPracticeGroupsBasePost {
             'dbkey' => $params[ 'dbkey' ],
             'name_full' => $params[ 'name_full' ],
             'name_short' => $params[ 'name_short' ],
+            'color_primary' => $params[ 'color_primary' ],
+            'color_secondary' => $params[ 'color_secondary' ],
             'view_by_public' => $params[ 'view_by_public' ],
             'join_by_public' => $params[ 'join_by_public' ],
             'any_member_add_user' => $params[ 'any_member_add_user' ],
@@ -77,6 +79,14 @@ class ApiPracticeGroupsEdit extends ApiPracticeGroupsBasePost {
             ],
             'name_short' => [
                 ApiBase::PARAM_REQUIRED => true,
+                ApiBase::PARAM_TYPE => 'string'
+            ],
+            'color_primary' => [
+                ApiBase::PARAM_REQUIRED => false,
+                ApiBase::PARAM_TYPE => 'string'
+            ],
+            'color_secondary' => [
+                ApiBase::PARAM_REQUIRED => false,
                 ApiBase::PARAM_TYPE => 'string'
             ],
             'view_by_public' => [

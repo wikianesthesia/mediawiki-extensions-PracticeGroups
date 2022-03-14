@@ -201,7 +201,7 @@
                 practicegroupsuser_id: practiceGroupsUserId
             };
 
-            if( pgaction == 'resendverificationemail' ) {
+            if( pgaction === 'resendverificationemail' ) {
                 delete apiParams.useraction;
             }
 
@@ -215,7 +215,7 @@
                 // No additional params needed
             } else if( buttonAction === 'inviteuser' ) {
                 actionParams = {
-                    practicegroup_id: practiceGroupId,
+                    practicegroup_id: practiceGroupId
                 };
 
                 var usernameOrEmail = $( '#practicegroups-inviteuser-search' ).val().trim();
@@ -242,8 +242,12 @@
                 mw.practiceGroups.common.showAlert( mw.msg( 'practicegroups-error-generic' ), 'danger' );
             } );
         },
-        showAlert: function( message, style = 'info' ) {
-            var attachElement = $( '#nav-tabContent' ).length ? $( '#nav-tabContent' ) : $( '#bodyContent' );
+        showAlert: function( message, style, attachElement ) {
+            style = style !== undefined ? style : 'info';
+
+            if( attachElement === undefined ) {
+                attachElement = $( '#nav-tabContent' ).length ? $( '#nav-tabContent' ) : $( '#bodyContent' );
+            }
 
             $( '.alert' ).alert( 'close' );
 

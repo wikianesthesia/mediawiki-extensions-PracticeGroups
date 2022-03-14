@@ -26,6 +26,9 @@
     "PracticeGroupsDisableCategories": {
       "value": true
     },
+    "PracticeGroupsEmailMaxRate": {
+      "value": 10
+    },
     "PracticeGroupsNotesAddAction": {
       "value": true
     },
@@ -193,14 +196,25 @@
         "practicegroups-practicegroup-articles-create-dialog-header",
         "practicegroups-practicegroup-articles-create-dialog-label",
         "practicegroups-practicegroup-articles-create-dialog-help",
-        "practicegroups-practicegroup-articles-create-dialog-proceedbutton"
+        "practicegroups-practicegroup-articles-create-dialog-proceedbutton",
+        "practicegroups-practicegroup-massinvite-dialog-header",
+        "practicegroups-practicegroup-massinvite-dialog-label",
+        "practicegroups-practicegroup-massinvite-dialog-help",
+        "practicegroups-practicegroup-massinvite-dialog-sendinvites",
+        "practicegroups-practicegroup-massinvite-dialog-confirm",
+        "practicegroups-practicegroup-massinvite-dialog-result-error",
+        "practicegroups-practicegroup-massinvite-dialog-result-success",
+        "practicegroups-practicegroup-massinvite-dialog-error-invalidemails",
+        "practicegroups-practicegroup-massinvite-dialog-error-usernames"
       ]
     },
     "ext.practiceGroups.searchSuggest": {
       "scripts": [
         "practiceGroups.searchSuggest/practiceGroups.searchSuggest.js"
       ],
-      "styles": [],
+      "styles": [
+        "practiceGroups.searchSuggest/practiceGroups.searchSuggest.less"
+      ],
       "dependencies": [
         "mediawiki.searchSuggest"
       ],

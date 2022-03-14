@@ -14,9 +14,9 @@
         createDialogExistingPublicTitles: [],
         nsPracticeGroup: 7740,
         nsPracticeGroupNotes: 7742,
+        practiceGroupId: null,
         practiceGroupDBKey: null,
-        regexPracticeGroup: /PracticeGroup(Notes)?:([\w\d_-]+)\/?(.*)/,
-        notesSearchResultSuffix: ' (Notes)',
+        regexPracticeGroup: /PracticeGroup:([\w\d_-]+)(\/(.*))?/,
         addHandlers: function() {
             $( '.nav-link-main' ).on( 'shown.bs.tab', function() {
                 if( window.location.hash !== '' ) {
@@ -29,9 +29,12 @@
             $( '#practicegroup-createarticle-button' ).click( function() {
                 mw.practiceGroups.dashboard.createArticleClick();
             } );
+
+            $( '#practicegroup-massinvite-button' ).click( function() {
+                mw.practiceGroups.dashboard.massInviteClick();
+            } );
         },
         createArticleClick: function() {
-
             var existingPublicResultsDefault = $( '<i>' ).append( mw.msg( 'practicegroups-practicegroup-articles-create-dialog-existingpublicgrouparticles-noresults' ) );
             var existingPracticeGroupResultsDefault = $( '<i>' ).append( mw.msg( 'practicegroups-practicegroup-articles-create-dialog-existingpracticegrouparticles-noresults' ) );
 
@@ -84,7 +87,7 @@
                     'class': 'modal-header'
                 } ).append( $( '<h5>', {
                     'class': 'modal-title pt-0',
-                    'id': 'modalConfirmLabel'
+                    'id': 'modalCreateLabel'
                 } ).append( mw.msg( 'practicegroups-practicegroup-articles-create-dialog-header' )
                 ), $( '<button>', {
                     'type': 'button',
@@ -229,13 +232,302 @@
                 .modal( 'show' );
         },
         init: function() {
-            mw.practiceGroups.dashboard.practiceGroupDBKey = window.location.href.match( mw.practiceGroups.dashboard.regexPracticeGroup )[ 2 ];
+            mw.practiceGroups.dashboard.practiceGroupDBKey = window.location.href.match( mw.practiceGroups.dashboard.regexPracticeGroup )[ 1 ];
+            mw.practiceGroups.dashboard.practiceGroupId = $( '#practicegroup-data-' + mw.practiceGroups.dashboard.practiceGroupDBKey ).attr( 'data-id' );
 
             mw.practiceGroups.dashboard.addHandlers();
 
             mw.practiceGroups.dashboard.renderDataTables();
 
             $( '.practicegroups-rendershield' ).contents().unwrap();
+        },
+        massInviteClick: function() {
+            var modalContent = $( '<div>' ).append( $( '<div>', {
+                'class': 'form-group'
+            } ).append( $( '<label>', {
+                'for': '#modalMassInviteInput'
+            } ).append( mw.msg( 'practicegroups-practicegroup-massinvite-dialog-label' )
+            ), $( '<textarea>', {
+                'class': 'form-control',
+                'id': 'modalMassInviteInput',
+                'aria-describedby': 'modalMassInviteHelp',
+                'autocomplete': 'off',
+                'rows': 10
+            } ), $( '<small>', {
+                'id': 'modalMassInviteHelp',
+                'class': 'form-text text-muted'
+            } ).append( mw.msg( 'practicegroups-practicegroup-massinvite-dialog-help' )
+            ) ) );
+
+            $( '#modalMassInvite' ).remove();
+
+            $( '#bodyContent' ).prepend( $( '<div>', {
+                'class': 'modal fade',
+                'id': 'modalMassInvite',
+                'tabindex': '-1',
+                'role': 'dialog',
+                'aria-labelledby': 'modalMassInviteLabel',
+                'aria-hidden': 'true'
+            } ).append( $( '<div>', {
+                'class': 'modal-dialog',
+                'role': 'document'
+            } ).append( $( '<div>', {
+                'class': 'modal-content'
+            } ).append( $( '<div>', {
+                    'class': 'modal-header'
+                } ).append( $( '<h5>', {
+                    'class': 'modal-title pt-0',
+                    'id': 'modalMassInviteLabel'
+                } ).append( mw.msg( 'practicegroups-practicegroup-massinvite-dialog-header' )
+                ), $( '<button>', {
+                    'type': 'button',
+                    'class': 'close',
+                    'data-dismiss': 'modal',
+                    'aria-label': 'Close'
+                } ).append( $( '<span>', {
+                    'aria-hidden': true
+                } ).append( '&times;'
+                ) ) ), $( '<div>', {
+                    'class': 'modal-body'
+                } ).append( modalContent ),
+                $( '<div>', {
+                    'class': 'modal-footer'
+                } ).append( $( '<button>', {
+                        'type': 'button',
+                        'class': 'btn btn-primary',
+                        'disabled': true,
+                        'id': 'modalMassInviteSendInvites'
+                    } ).append( mw.msg( 'practicegroups-practicegroup-massinvite-dialog-sendinvites' ) ),
+                    $( '<button>', {
+                        'type': 'button',
+                        'class': 'btn btn-secondary',
+                        'data-dismiss': 'modal'
+                    } ).append( mw.msg( 'practicegroups-cancel' ) )
+                )))));
+
+            $( '#modalMassInviteSendInvites' ).click( function() {
+                mw.practiceGroups.dashboard.massInviteSendInvites();
+            } );
+
+            $( '#modalMassInviteInput' ).on( 'input', function() {
+                if( $( this ).val() ) {
+                    $( '#modalMassInviteSendInvites' ).prop( 'disabled', false );
+                } else {
+                    $( '#modalMassInviteSendInvites' ).prop( 'disabled', true );
+                }
+            } );
+
+            $( '#modalMassInvite' )
+                .on( 'shown.bs.modal', function() {
+                    $( '#modalMassInviteInput' ).focus();
+                } )
+                .modal( 'show' );
+        },
+        massInviteSendInvites: function() {
+            if( !$( '#modalMassInviteInput').length ) {
+                return;
+            }
+
+            $( '#modalMassInvite .alert' ).remove();
+
+            // Get element to attach alert messages to
+            var alertTarget = $( '#modalMassInvite .modal-body' );
+
+            var emails = [];
+            var usernames = [];
+            var invalidEmails = [];
+
+            // Get user input
+            var inviteList = $( '#modalMassInviteInput').val();
+
+            // Support line-delimited
+            var inviteListLines = inviteList.split( /\r?\n/ );
+
+            for( var iLine in inviteListLines ) {
+                // Support comma-delimited
+                var inviteListUsers = inviteListLines[ iLine ].split( ',' );
+                for( var iUser in inviteListUsers ) {
+                    // If the user contains an @, assume it's an email, otherwise assume it's a MediaWiki username
+                    if( inviteListUsers[ iUser ].indexOf( '@' ) > -1 ) {
+                        if( mw.practiceGroups.common.isValidEmail( inviteListUsers[ iUser ] ) ) {
+                            emails.push( inviteListUsers[ iUser ] );
+                        } else {
+                            invalidEmails.push( inviteListUsers[ iUser ] );
+                        }
+                    } else {
+                        usernames.push( inviteListUsers[ iUser ] );
+                    }
+                }
+            }
+
+            if( invalidEmails.length ) {
+                mw.practiceGroups.common.showAlert(
+                    mw.msg( 'practicegroups-practicegroup-massinvite-dialog-error-invalidemails', invalidEmails.join( '<br/>' ) ),
+                    'danger',
+                    alertTarget );
+
+                return;
+            }
+
+            var confirmSendInvites = function( emails, usernames ) {
+                var practiceGroupId = mw.practiceGroups.dashboard.practiceGroupId;
+
+                if( !practiceGroupId ) {
+                    return;
+                }
+
+                var userCount = emails.length + usernames.length;
+
+                var doInvitesApiQuery = function() {
+                    $( '#modalMassInviteSendInvites' ).prop( 'disabled', true );
+
+                    var resultedUsers = 0;
+                    var invitedUsers = 0;
+                    var errors = [];
+
+                    alertTarget.prepend( $( '<div>', {
+                        'class': 'progress'
+                    } ).append( $( '<div>', {
+                        'id': 'modalMassInviteProgress',
+                        'class': 'progress-bar progress-bar-striped progress-bar-animated',
+                        'role': 'progressbar',
+                        'aria-valuenow': 0,
+                        'aria-valuemin': 0,
+                        'aria-valuemax': userCount
+                    } ) ) );
+
+                    var showResults = function() {
+                        $( '#modalMassInviteProgress' ).parent().remove();
+
+                        var success = invitedUsers === resultedUsers;
+                        var alertStyle = success ? 'success' : 'danger';
+                        var message = success ?
+                            mw.msg( 'practicegroups-practicegroup-massinvite-dialog-result-success', invitedUsers, mw.practiceGroups.dashboard.practiceGroupDBKey ) :
+                            mw.msg( 'practicegroups-practicegroup-massinvite-dialog-result-error', invitedUsers, errors.join( '<br/>' ) );
+
+                        mw.practiceGroups.common.showAlert( message, alertStyle, alertTarget );
+
+                        $( '#modalMassInvite' )
+                            .on( 'hidden.bs.modal', function() {
+                                location.reload();
+                            } );
+                    };
+
+                    var updateProgress = function() {
+                        var width = 100 * resultedUsers / userCount;
+
+                        $( '#modalMassInviteProgress' ).css( 'width', width + '%' );
+
+                        if( resultedUsers === userCount ) {
+                            showResults();
+                        }
+                    };
+
+                    var apiParams = {
+                        'action': 'practicegroups',
+                        'pgaction': 'edituser',
+                        'useraction': 'inviteuser',
+                        'practicegroup_id': practiceGroupId,
+                        'practicegroupsuser_id': 0
+                    };
+
+                    var currentUser = 1;
+
+                    for( let iEmail in emails ) {
+                        setTimeout( function() {
+                            new mw.Api().postWithEditToken(
+                                Object.assign( apiParams, {
+                                    'affiliated_email': emails[ iEmail ]
+                                } )
+                            ).then( function( result ) {
+                                resultedUsers++;
+
+                                if( result.practicegroups.edituser.status === 'error' ) {
+                                    errors.push( emails[ iEmail ] + ': ' + result.practicegroups.edituser.message );
+                                } else {
+                                    invitedUsers++;
+                                }
+
+                                updateProgress();
+                            } ).fail( function( a, b, c ) {
+                                errors.push( emails[ iEmail ] + ': ' + b.error.info );
+                                resultedUsers++;
+                                updateProgress();
+                            } );
+                        }, ( currentUser - 1 ) * 1000 / mw.config.get( 'wgPracticeGroupsEmailMaxRate' ) );
+
+                        currentUser++;
+                    }
+
+                    for( let iUsernames in usernames ) {
+                        setTimeout( function() {
+                            new mw.Api().postWithEditToken(
+                                Object.assign( apiParams, {
+                                    'user_name': usernames[ iUsernames ]
+                                } )
+                            ).then( function( result ) {
+                                console.log( result );
+                                resultedUsers++;
+
+                                if( result.practicegroups.edituser.status === 'error' ) {
+                                    errors.push( usernames[ iUsernames ] + ': ' + result.practicegroups.edituser.message );
+                                } else {
+                                    invitedUsers++;
+                                }
+
+                                updateProgress();
+                            } ).fail( function( a, b, c ) {
+                                errors.push( usernames[ iUsernames ] + ': ' + b.error.info );
+                                resultedUsers++;
+                                updateProgress();
+                            } );
+                        }, ( currentUser - 1 ) * 1000 / mw.config.get( 'wgPracticeGroupsEmailMaxRate' ) );
+
+                        currentUser++;
+                    }
+                };
+
+                mw.practiceGroups.common.confirm(
+                    mw.msg( 'practicegroups-practicegroup-massinvite-dialog-confirm', userCount, mw.practiceGroups.dashboard.practiceGroupDBKey ),
+                    doInvitesApiQuery
+                );
+            };
+
+            if( usernames.length ) {
+                var queryUserApiParams = {
+                    'action': 'query',
+                    'list': 'users',
+                    'ususers': usernames.join( '|' )
+                };
+
+                new mw.Api().get( queryUserApiParams ).then( function( response ) {
+                    var validUsernames = [];
+                    var invalidUsernames = [];
+
+                    for( var iResult in response.query.users ) {
+                        if( response.query.users[ iResult ].hasOwnProperty( 'userid' ) ) {
+                            validUsernames.push( response.query.users[ iResult ].name );
+                        } else {
+                            invalidUsernames.push( response.query.users[ iResult ].name );
+                        }
+                    }
+
+                    if( invalidUsernames.length ) {
+                        mw.practiceGroups.common.showAlert(
+                            mw.msg( 'practicegroups-practicegroup-massinvite-dialog-error-usernames', invalidUsernames.join( '<br/>' ) ),
+                            'danger',
+                            alertTarget );
+
+                        return;
+                    } else {
+                        confirmSendInvites( emails, validUsernames );
+                    }
+                } ).fail( function( a, b, c ) {
+                    console.log( b );
+                } );
+            } else {
+                confirmSendInvites( emails, [] );
+            }
         },
         renderDataTables: function() {
             if( $( '#table-pendinginvitations' ).length ) {

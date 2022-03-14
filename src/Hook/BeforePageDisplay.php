@@ -2,7 +2,9 @@
 
 namespace PracticeGroups\Hook;
 
+use Html;
 use PracticeGroups\DatabaseClass\PracticeGroup;
+use PracticeGroups\DatabaseClass\PracticeGroupsUser;
 use PracticeGroups\Page\PracticeGroupDashboard;
 use PracticeGroups\PracticeGroups;
 use OutputPage;
@@ -19,6 +21,19 @@ class BeforePageDisplay {
      */
     public static function callback( OutputPage &$out, Skin &$skin ) {
         $out->addModules( 'ext.practiceGroups.searchSuggest' );
+
+        $practiceGroupsUsers = PracticeGroupsUser::getAllForUser( $out->getUser()->getId() );
+
+        foreach( $practiceGroupsUsers as $practiceGroupsUser ) {
+            $practiceGroup = $practiceGroupsUser->getPracticeGroup();
+
+            $out->addHTML( Html::rawElement( 'div' , [
+                'id' => 'practicegroup-data-' . $practiceGroup->getDBKey(),
+                'data-id' => $practiceGroup->getId(),
+                'data-colorprimary' => $practiceGroup->getPrimaryColor(),
+                'data-colorsecondary' => $practiceGroup->getSecondaryColor(),
+            ] ) );
+        }
 
         $title = $out->getTitle();
 

@@ -3,33 +3,65 @@
 
 namespace PracticeGroups\Hook;
 
+use BootstrapUI\BootstrapUI;
+use HtmlArmor;
+use MediaWiki\MediaWikiServices;
 use PracticeGroups\PracticeGroups;
-use RequestContext;
 use SearchResult;
 use SpecialSearch;
 
 class ShowSearchHit {
     public static function callback( SpecialSearch $searchPage, SearchResult $result, $terms, &$link, &$redirect, &$section, &$extract, &$score, &$size, &$date, &$related, &$html ) {
-        $practiceGroup = PracticeGroups::getPracticeGroupFromTitle( $result->getTitle() );
+        $title = $result->getTitle();
+        $titleText = $title->getText();
 
-        if( $practiceGroup) {
-            $resultTitle = $result->getTitle();
+        $practiceGroup = PracticeGroups::getPracticeGroupFromTitle( $title );
 
-            if( !$practiceGroup->userCanReadPage( $resultTitle->getArticleID() ) ) {
+        if( $practiceGroup ) {
+            if( !$practiceGroup->userCanReadPage( $title->getArticleID() ) ) {
                 return false;
             }
 
-            if( $resultTitle->isSubpage() ) {
-                $mainArticleTitle = PracticeGroups::getMainArticleTitle( $resultTitle );
+            if( $title->isSubpage() ) {
+                $mainArticleTitle = PracticeGroups::getMainArticleTitle( $title );
 
                 if( $mainArticleTitle ) {
-                    $titleText = PracticeGroups::getPracticeGroupArticleDisplayTitle( $mainArticleTitle, $practiceGroup );
-
-                    $link = preg_replace( '/^(.*>)PracticeGroup:([\w-]+)\/(.*)(<.*)$/', '$1' . $titleText . '$4', $link );
+                    $titleText = $mainArticleTitle->getText();
                 }
             } else {
-                $link = preg_replace( '/^(.*>)PracticeGroup:([\w-]+)(<.*)$/', '$1' . $practiceGroup->getFullName() . '$3', $link );
+                $titleText = $practiceGroup->getFullName();
             }
+
+            $searchQuery = $searchPage->getRequest()->getText('search');
+            $searchWords = explode( ' ', $searchQuery );
+
+            foreach( $searchWords as $searchWord ) {
+                $titleText = preg_replace( '/(' . $searchWord . ')/i', '<span class="searchmatch">$1</span>', $titleText );
+            }
+
+            $badgeAttribs = [
+                'class' => 'practicegroups-searchhit-badge',
+            ];
+
+            $badgeStyle = '';
+
+            if( $practiceGroup->getPrimaryColor() ) {
+                $badgeStyle .= 'background-color: ' . $practiceGroup->getPrimaryColor() . ';';
+            }
+
+            if( $practiceGroup->getSecondaryColor() ) {
+                $badgeStyle .= 'color: ' . $practiceGroup->getSecondaryColor() . ';';
+            }
+
+            if( $badgeStyle ) {
+                $badgeAttribs[ 'style' ] = $badgeStyle;
+            }
+
+            $badgeHtml = BootstrapUI::badgeWidget( $badgeAttribs, $practiceGroup->getShortName() );
+
+            $linkRenderer = MediaWikiServices::getInstance()->getLinkRenderer();
+
+            $link = $linkRenderer->makeKnownLink( $title, new HtmlArmor( $titleText . $badgeHtml ) );
         }
     }
 }

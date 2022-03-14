@@ -139,6 +139,45 @@ class PracticeGroupFormEdit extends PracticeGroupForm {
             }
         }
 
+        $name = 'appearance';
+        $html .= Html::rawElement( 'h4', [], static::getMessageText( $name ) );
+
+        $colorsHtml = '';
+
+        $name = 'color_primary';
+        $colorsHtml .= BootstrapUI::textInputWidget( [
+            'name' => $name,
+            'value' => static::getValue( $name, $practiceGroup ),
+            'maxlength' => PracticeGroup::getMaxLength( $name ),
+            'required' => true,
+            'validation' => true,
+            'disabled' => $readOnly,
+            'readonly' => $readOnly,
+            'id' => static::getElementIdForName( $name ),
+            'label' => static::getMessageText( $name, 'label' ),
+            'help' => !$readOnly ? static::getMessageText( $name, 'help' ) : '',
+            'containerClass' => 'col-md-6'
+        ] );
+
+        $name = 'color_secondary';
+        $colorsHtml .= BootstrapUI::textInputWidget( [
+            'name' => $name,
+            'value' => static::getValue( $name, $practiceGroup ),
+            'maxlength' => PracticeGroup::getMaxLength( $name ),
+            'required' => true,
+            'validation' => true,
+            'disabled' => $readOnly,
+            'readonly' => $readOnly,
+            'id' => static::getElementIdForName( $name ),
+            'label' => static::getMessageText( $name, 'label' ),
+            'help' => !$readOnly ? static::getMessageText( $name, 'help' ) : '',
+            'containerClass' => 'col-md-6'
+        ] );
+
+        $html .= Html::rawElement( 'div', [
+            'class' => 'form-row'
+        ], $colorsHtml );
+
         $name = 'privacyandmembershippolicysettings';
         $html .= Html::rawElement( 'h4', [], static::getMessageText( $name ) );
 
