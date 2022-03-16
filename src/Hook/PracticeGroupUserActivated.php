@@ -1,6 +1,5 @@
 <?php
 
-
 namespace PracticeGroups\Hook;
 
 use PracticeGroups\DatabaseClass\PracticeGroupsUser;

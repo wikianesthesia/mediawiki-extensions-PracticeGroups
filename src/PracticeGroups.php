@@ -16,7 +16,6 @@ use RequestContext;
 use Status;
 use MediaWiki\Storage\SlotRecord;
 use Title;
-use WikiPage;
 use WikitextContent;
 
 class PracticeGroups {
@@ -102,61 +101,6 @@ class PracticeGroups {
 
         if( !in_array( $titleNamespaceText, $wgPracticeGroupsNotesEnabledNamespaces )
             || in_array( $title->getDBkey(), $wgPracticeGroupsNotesBlacklistTitles ) ) {
-            return false;
-        }
-
-        return true;
-    }
-
-    public static function createPracticeGroupHomepage( PracticeGroup $practiceGroup ) {
-        # TODO eventually return a status for proper handling, but for now just fail silently
-
-        global $wgPracticeGroupsHomepageTemplateTitle;
-
-        if( !$wgPracticeGroupsHomepageTemplateTitle ) {
-            return false;
-        }
-
-        if( !$practiceGroup || !$practiceGroup->exists() ) {
-            return false;
-        }
-
-        $user = RequestContext::getMain()->getUser();
-
-        if( !$user || !$user->isRegistered() || !$practiceGroup->isUserActiveMember( $user->getId() ) ) {
-            return false;
-        }
-
-        $homepageTemplateTitle = Title::newFromText( $wgPracticeGroupsHomepageTemplateTitle );
-
-        if( !$homepageTemplateTitle->exists() ) {
-            return false;
-        }
-
-        $homepageTemplatePage = WikiPage::factory( $homepageTemplateTitle );
-        $homepageTemplateContent = $homepageTemplatePage->getContent()->getWikitextForTransclusion();
-
-        $homepageTemplateContent = str_replace( '%NAME_FULL%', $practiceGroup->getFullName(), $homepageTemplateContent );
-        $homepageTemplateContent = str_replace( '%NAME_SHORT%', $practiceGroup->getShortName(), $homepageTemplateContent );
-        $homepageTemplateContent = str_replace( '%DBKEY%', $practiceGroup->getDBKey(), $homepageTemplateContent );
-
-        $homepageTitle = $practiceGroup->getDashboardTitle();
-
-        if( $homepageTitle->exists() || !$homepageTitle->canExist()) {
-            return false;
-        }
-
-        $homepagePage = WikiPage::factory( $homepageTitle );
-
-        $summary = CommentStoreComment::newUnsavedComment( wfMessage( 'practicegroups-createhomepagefromtemplate-comment' )->plain() );
-
-        $homepageContent = new WikitextContent( $homepageTemplateContent );
-
-        $updater = $homepagePage->newPageUpdater( $user );
-        $updater->setContent( SlotRecord::MAIN, $homepageContent );
-        $updater->saveRevision( $summary );
-
-        if( !$updater->wasSuccessful() ) {
             return false;
         }
 

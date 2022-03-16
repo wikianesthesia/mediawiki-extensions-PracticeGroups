@@ -95,6 +95,7 @@
     "PageMoveComplete": "PracticeGroups\\Hook\\PageMoveComplete::callback",
     "PersonalUrls": "PracticeGroups\\Hook\\PersonalUrls::callback",
     "PracticeGroupUserActivated": "PracticeGroups\\Hook\\PracticeGroupUserActivated::callback",
+    "PracticeGroupCreated": "PracticeGroups\\Hook\\PracticeGroupCreated::callback",
     "SendWatchlistEmailNotification": "PracticeGroups\\Hook\\SendWatchlistEmailNotification::callback",
     "SkinTemplateNavigation::Universal": "PracticeGroups\\Hook\\SkinTemplateNavigation_Universal::callback",
     "SpecialNewpagesConditions": "PracticeGroups\\Hook\\SpecialNewpagesConditions::callback",

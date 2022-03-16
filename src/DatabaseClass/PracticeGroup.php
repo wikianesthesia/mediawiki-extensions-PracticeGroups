@@ -3,6 +3,7 @@
 namespace PracticeGroups\DatabaseClass;
 
 use DatabaseClasses\DatabaseClass;
+use Hooks;
 use PracticeGroups\PracticeGroups;
 use RequestContext;
 use Status;
@@ -588,12 +589,13 @@ class PracticeGroup extends DatabaseClass {
 
     public function save( bool $test = false ): Status {
         $result = parent::save( $test );
+        $resultValue = $result->getValue();
 
         if( !$result->isOK() ) {
             return $result;
         }
 
-        if( count( $this->getActivePracticeGroupsUsers() ) == 0 ) {
+        if( !count( $this->getActivePracticeGroupsUsers() ) ) {
             # This should only happen when a practice group was just created.
             # In this case, we should create a new administrator practice group user for the requesting user.
             # hasRight() asserts that the user exists and is logged in, so we can skip that check here.
@@ -608,6 +610,16 @@ class PracticeGroup extends DatabaseClass {
             ] );
 
             $result = $practiceGroupsUser->save();
+
+            if( !$result->isOK() ) {
+                return $result;
+            }
+
+            static::$myPracticeGroupsUser = $practiceGroupsUser;
+        }
+
+        if( $resultValue[ 'action' ] === static::ACTION_CREATE ) {
+            Hooks::run( 'PracticeGroupCreated', [ $this ] );
         }
 
         return $result;

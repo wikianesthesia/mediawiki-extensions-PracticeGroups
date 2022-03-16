@@ -49,10 +49,6 @@ class ApiPracticeGroupsEdit extends ApiPracticeGroupsBasePost {
             $output[ $pgaction ][ 'message' ] = $this->simplifyError( $result->getMessage()->plain() );
         }
 
-        if( $actionCreate ) {
-            PracticeGroups::createPracticeGroupHomepage( $practiceGroup );
-        }
-
         $this->getResult()->addValue( null, $this->apiPracticeGroups->getModuleName(), $output );
     }
 
