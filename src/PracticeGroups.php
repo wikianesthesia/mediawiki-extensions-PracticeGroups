@@ -304,7 +304,7 @@ class PracticeGroups {
             $practiceGroupTitle = Title::newFromText( $practiceGroupTitle );
         }
 
-        return preg_replace( '/' . $practiceGroupTitle->getRootText() . '\/?/', '', $practiceGroupTitle->getText() );
+        return preg_replace( '/' . preg_quote( $practiceGroupTitle->getRootText() ) . '\/?/', '', $practiceGroupTitle->getText() );
     }
 
     /**
