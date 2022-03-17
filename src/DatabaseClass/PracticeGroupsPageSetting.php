@@ -4,6 +4,7 @@ namespace PracticeGroups\DatabaseClass;
 
 use DatabaseClasses\DatabaseClass;
 use DatabaseClasses\DatabaseProperty;
+use PracticeGroups\PracticeGroups;
 use RequestContext;
 use Status;
 use Title;
@@ -211,6 +212,13 @@ class PracticeGroupsPageSetting extends DatabaseClass {
 
         $genericErrorMessage = 'practicegroups-error-permissiondenied';
 
+        $myUser = RequestContext::getMain()->getUser();
+
+        # Allow all actions for PracticeGroups sysops
+        if( PracticeGroups::isUserPracticeGroupSysop( $myUser ) ) {
+            return $result;
+        }
+
         // Page settings can only be inserted
         if( $action === 'delete' || $action === 'edit' ) {
             $result->fatal( $genericErrorMessage );
@@ -218,9 +226,7 @@ class PracticeGroupsPageSetting extends DatabaseClass {
             return $result;
         }
 
-        $userId = RequestContext::getMain()->getUser()->getId();
-
-        if( !$this->getPracticeGroup()->isUserAdmin( $userId ) ) {
+        if( !$this->getPracticeGroup()->isUserAdmin( $myUser->getId() ) ) {
             $result->fatal( $genericErrorMessage );
 
             return $result;

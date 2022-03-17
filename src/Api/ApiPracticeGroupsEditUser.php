@@ -172,7 +172,7 @@ class ApiPracticeGroupsEditUser extends ApiPracticeGroupsBasePost {
 
         if( !$result->isOK() ) {
             $output[ $pgaction ][ 'status' ] = 'error';
-            $output[ $pgaction ][ 'message' ] = $this->simplifyError( $result->getMessage()->plain() );
+            $output[ $pgaction ][ 'message' ] = $this->simplifyError( $result->getMessage()->text() );
 
             $this->getResult()->addValue( null, $this->apiPracticeGroups->getModuleName(), $output );
 

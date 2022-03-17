@@ -20,7 +20,7 @@ class PracticeGroupCreated {
         if( !$practiceGroup || !$practiceGroup->exists() ) {
             $logger->error(
                 __METHOD__ . ': ' .
-                wfMessage( 'practicegroups-createhomepage-practicegroupnotexist' )->plain()
+                wfMessage( 'practicegroups-createhomepage-practicegroupnotexist' )->text()
             );
             return;
         }
@@ -30,7 +30,7 @@ class PracticeGroupCreated {
         if( !$user || !$user->isRegistered() ) {
             $logger->error(
                 __METHOD__ . ': ' .
-                wfMessage( 'practicegroups-createhomepage-usernotloggedin' )->plain()
+                wfMessage( 'practicegroups-createhomepage-usernotloggedin' )->text()
             );
             return;
         } elseif( !$practiceGroup->isUserActiveMember( $user->getId() ) ) {
@@ -40,13 +40,13 @@ class PracticeGroupCreated {
                     'practicegroups-createhomepage-usernotpracticegroupmember',
                     $user->getName(),
                     $practiceGroup->getFullName()
-                )->plain()
+                )->text()
             );
             return;
         } elseif( !$wgPracticeGroupsHomepageTemplateTitle ) {
             $logger->error(
                 __METHOD__ . ': ' .
-                wfMessage( 'practicegroups-createhomepage-templatenotdefined' )->plain()
+                wfMessage( 'practicegroups-createhomepage-templatenotdefined' )->text()
             );
             return;
         }
@@ -59,7 +59,7 @@ class PracticeGroupCreated {
                 wfMessage(
                     'practicegroups-createhomepage-templatenotexist',
                     $homepageTemplateTitle->getFullText()
-                )->plain()
+                )->text()
             );
 
             return;
@@ -82,7 +82,7 @@ class PracticeGroupCreated {
                 wfMessage(
                     'practicegroups-createhomepage-homepagealreadyexists',
                     $homepageTitle->getFullText()
-                )->plain()
+                )->text()
             );
             return;
         } elseif( !$homepageTitle->canExist() ) {
@@ -91,14 +91,14 @@ class PracticeGroupCreated {
                 wfMessage(
                     'practicegroups-createhomepage-homepageinvalid',
                     $homepageTitle->getFullText()
-                )->plain()
+                )->text()
             );
             return;
         }
 
         $homepagePage = $wikiPageFactory->newFromTitle( $homepageTitle );
 
-        $summary = CommentStoreComment::newUnsavedComment( wfMessage( 'practicegroups-createhomepagefromtemplate-comment' )->plain() );
+        $summary = CommentStoreComment::newUnsavedComment( wfMessage( 'practicegroups-createhomepagefromtemplate-comment' )->text() );
 
         $homepageContent = new WikitextContent( $homepageTemplateContent );
 
@@ -112,8 +112,8 @@ class PracticeGroupCreated {
                 wfMessage(
                     'practicegroups-createhomepage-couldntcreatehomepage',
                     $homepageTitle->getFullText(),
-                    $updater->getStatus()->getMessage()->plain()
-                )->plain()
+                    $updater->getStatus()->getMessage()->text()
+                )->text()
             );
             return;
         }
@@ -124,7 +124,7 @@ class PracticeGroupCreated {
                 'practicegroups-createhomepage-homepagecreated',
                 $homepageTitle->getFullText(),
                 $practiceGroup->getFullName()
-            )->plain()
+            )->text()
         );
     }
 }

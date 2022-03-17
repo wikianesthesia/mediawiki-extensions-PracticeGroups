@@ -273,7 +273,7 @@ class PracticeGroupsUser extends DatabaseClass {
         ##
 
         # The PracticeGroup and User being acted upon must exist if an id is set.
-        if( !$practiceGroup || ( $user->getId() > 0 && !$user->loadFromDatabase() ) ) {
+        if( !$practiceGroup || ( $user->isRegistered() && !$user->loadFromDatabase() ) ) {
             if( $action === static::ACTION_DELETE ) {
                 # The one exception is if the PracticeGroupsUser becomes orphaned because
                 # either the PracticeGroup or the User was deleted and this wasn't cleaned up properly.
@@ -322,10 +322,16 @@ class PracticeGroupsUser extends DatabaseClass {
                 return $result;
             }
 
-            # Allow multiple instances with user_id = 0
+            # Allow duplicate entries for user_id only with user_id = 0
             if( $this->getValue( 'user_id' ) && $practiceGroup->getPracticeGroupsUserForUser( $this->getValue( 'user_id' ) ) ) {
                 $result->fatal( 'practicegroups-error-practicegroupsuser-alreadyexists' );
 
+                return $result;
+            }
+
+            # TODO Divide the subsequent conditionals into validity-related checks (which a PracticeGroups sysop
+            # should not be able to bypass), and permissions-related checks.
+            if( PracticeGroups::isUserPracticeGroupSysop( $myUser ) ) {
                 return $result;
             }
 
@@ -346,7 +352,7 @@ class PracticeGroupsUser extends DatabaseClass {
             if( $this->getValue( 'active_since' ) ) {
                 # The user being created is set to active
 
-                if( $user->getId() == 0 ) {
+                if( !$user->isRegistered() ) {
                     # Only valid wiki users can be active members
                     $result->fatal( $genericErrorMessage );
 
@@ -426,7 +432,7 @@ class PracticeGroupsUser extends DatabaseClass {
             if( $this->getValue( 'requested_since' ) ) {
                 # The user being created is being set to requested
 
-                if( $user->getId() == 0 ) {
+                if( !$user->isRegistered() ) {
                     # Only valid wiki users can be request to be members
                     $result->fatal( $genericErrorMessage );
 
@@ -581,7 +587,13 @@ class PracticeGroupsUser extends DatabaseClass {
                 }
             }
         } elseif( $action === static::ACTION_EDIT ) {
-            if( $user->getId() == 0 ) {
+            # TODO Divide the subsequent conditionals into validity-related checks (which a PracticeGroups sysop
+            # should not be able to bypass), and permissions-related checks.
+            if( PracticeGroups::isUserPracticeGroupSysop( $myUser ) ) {
+                return $result;
+            }
+
+            if( !$user->isRegistered() ) {
                 # There is no other valid scenario for a non-registered practicegroupsuser (i.e. invited user) to be edited
                 # They are only created when invited, and deleted if rejected or canceled.
                 $result->fatal( $genericErrorMessage );
@@ -760,6 +772,10 @@ class PracticeGroupsUser extends DatabaseClass {
                 }
             }
         } elseif( $action === static::ACTION_DELETE ) {
+            if( PracticeGroups::isUserPracticeGroupSysop( $myUser ) ) {
+                return $result;
+            }
+
             # The valid cases for deletion are:
             # - A user deletes themselves from a practice group
             # - A user is deleted from a practice group by a practice group administrator
@@ -876,7 +892,7 @@ class PracticeGroupsUser extends DatabaseClass {
         # to populate fields in certain conditions and make a few choice validations that require a more specific
         # error message if they fail.
         if( $action === static::ACTION_CREATE ) {
-            if( count( $practiceGroup->getAllPracticeGroupsUsers() ) == 0 ) {
+            if( !count( $practiceGroup->getAllPracticeGroupsUsers() ) ) {
                 # Special case, if the practice group has no users, force the creating user to be an admin
                 $this->setValue( 'admin', 1 );
                 $this->setValue( 'active_since', time() );
@@ -886,10 +902,11 @@ class PracticeGroupsUser extends DatabaseClass {
                 # If it's set, reset it to the server time.
                 $this->setValue( 'active_since', time() );
 
-                # The only valid case where a user being created is set to active is self-creation for a practice group
-                # that can be joined by the public. hasRight() will assert the proper permissions, but we should make
-                # sure that approved_by_user_id is also set.
-                $this->setValue( 'approved_by_user_id', $this->getValue( 'user_id' ) );
+                if( !$this->getValue( 'approved_by_user_id' ) ) {
+                    # If a user is being self-created for a practice group, make sure that approved_by_user_id is also set.
+                    # hasRight() will verify appropriate permissions to do this.
+                    $this->setValue( 'approved_by_user_id', $this->getValue( 'user_id' ) );
+                }
 
                 $practiceGroupUserActivating = true;
             }
@@ -921,7 +938,8 @@ class PracticeGroupsUser extends DatabaseClass {
                 $resultEmailValidation = $this->validateAffiliatedEmail();
 
                 if( !$resultEmailValidation->isOK() ) {
-                    return $resultEmailValidation;
+                    $result->merge( $resultEmailValidation );
+                    return $result;
                 }
 
                 if( $this->getValue( 'awaiting_email_verification_since' )
@@ -954,19 +972,21 @@ class PracticeGroupsUser extends DatabaseClass {
                 $resultSendEmail = $this->sendInvitationEmail();
 
                 if( !$resultSendEmail->isOK() ) {
-                    return $resultSendEmail;
+                    $result->merge( $resultSendEmail );
+                    return $result;
                 }
             } elseif( $this->isAwaitingEmailVerification() ) {
                 $resultSendEmail = $this->sendVerificationEmail();
 
                 if( !$resultSendEmail->isOK() ) {
+                    $result->merge( $resultSendEmail );
                     return $resultSendEmail;
                 }
             }
         }
 
         if( $practiceGroupUserActivating ) {
-            Hooks::run( 'PracticeGroupUserActivated', [ $this ] );
+            Hooks::run( 'PracticeGroupsUserActivated', [ $this ] );
         }
 
         return $result;

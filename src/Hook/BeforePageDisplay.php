@@ -53,9 +53,9 @@ class BeforePageDisplay {
             }
         } elseif( $title->getNamespace() === NS_PRACTICEGROUP_TALK ) {
             if( $title->isSubpage() ) {
-                $out->setPageTitle( wfMessage( 'practicegroups-talk-articletitle', PracticeGroups::getMainArticleTitle( $title )->getText(), $practiceGroup->getShortName() )->plain() );
+                $out->setPageTitle( wfMessage( 'practicegroups-talk-articletitle', PracticeGroups::getMainArticleTitle( $title )->getText(), $practiceGroup->getShortName() )->text() );
             } else {
-                $out->setPageTitle( wfMessage( 'practicegroups-talk-grouptitle', (string)$practiceGroup )->plain() );
+                $out->setPageTitle( wfMessage( 'practicegroups-talk-grouptitle', (string)$practiceGroup )->text() );
             }
         }
     }

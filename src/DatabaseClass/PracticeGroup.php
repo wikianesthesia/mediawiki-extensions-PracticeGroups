@@ -503,6 +503,11 @@ class PracticeGroup extends DatabaseClass {
             return $result;
         }
 
+        # Allow all actions for PracticeGroups sysops
+        if( PracticeGroups::isUserPracticeGroupSysop( $myUser ) ) {
+            return $result;
+        }
+
         if( $action === static::ACTION_CREATE ) {
             # Creation permissions just depend on the mediawiki user right which the parent will check
             return parent::hasRight( $action );

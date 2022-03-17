@@ -4,7 +4,7 @@ namespace PracticeGroups\Hook;
 
 use PracticeGroups\DatabaseClass\PracticeGroupsUser;
 
-class PracticeGroupUserActivated {
+class PracticeGroupsUserActivated {
     public static function callback( PracticeGroupsUser $practiceGroupsUser ) {
         global $wgPracticeGroupsConfirmMatchingMWEmailOnVerify;
 

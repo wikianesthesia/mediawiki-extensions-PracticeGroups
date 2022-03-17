@@ -3,7 +3,6 @@
 namespace PracticeGroups;
 
 use BootstrapUI\BootstrapUI;
-use CommentStoreComment;
 use Html;
 use MediaWiki\Logger\LoggerFactory;
 use MediaWiki\MediaWikiServices;
@@ -14,9 +13,8 @@ use PracticeGroups\DatabaseClass\PracticeGroupsUser;
 use Psr\Log\LoggerInterface;
 use RequestContext;
 use Status;
-use MediaWiki\Storage\SlotRecord;
 use Title;
-use WikitextContent;
+use User;
 
 class PracticeGroups {
 
@@ -362,7 +360,7 @@ class PracticeGroups {
             }
         }
 
-        return wfMessage( 'practicegroups-articletitle', $titleText, $practiceGroup->getShortName() )->plain();
+        return wfMessage( 'practicegroups-articletitle', $titleText, $practiceGroup->getShortName() )->text();
     }
 
     public static function getPracticeGroupFromTitle( $title ) {
@@ -443,6 +441,18 @@ class PracticeGroups {
         }
 
         return true;
+    }
+
+    public static function isUserPracticeGroupSysop( User $user ) {
+        if( MediaWikiServices::getInstance()->getPermissionManager()->userHasRight(
+                $user,
+                'practicegroups-sysop'
+            )
+        ) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
