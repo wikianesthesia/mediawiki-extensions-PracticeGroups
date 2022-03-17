@@ -333,8 +333,9 @@ class PracticeGroupDashboard {
 
                     if( $practiceGroupsUser->getUserId() ) {
                         $practiceGroupsUserMWUser = $practiceGroupsUser->getUser();
+                        $displayName = $practiceGroupsUserMWUser->getRealName() ?: $practiceGroupsUserMWUser->getName();
 
-                        $nameHtml .= $linkRenderer->makeLink( $practiceGroupsUserMWUser->getUserPage(), $practiceGroupsUserMWUser->getRealName() );
+                        $nameHtml .= $linkRenderer->makeLink( $practiceGroupsUserMWUser->getUserPage(), $displayName );
                     } elseif( $practiceGroupsUser->getAffiliatedEmail() ) {
                         $nameHtml .= $practiceGroupsUser->getAffiliatedEmail();
                     }
@@ -486,8 +487,9 @@ class PracticeGroupDashboard {
 
                     if( $practiceGroupsUser->getUserId() ) {
                         $practiceGroupsUserMWUser = $practiceGroupsUser->getUser();
+                        $displayName = $practiceGroupsUserMWUser->getRealName() ?: $practiceGroupsUserMWUser->getName();
 
-                        $nameHtml .= $linkRenderer->makeLink( $practiceGroupsUserMWUser->getUserPage(), $practiceGroupsUserMWUser->getRealName() );
+                        $nameHtml .= $linkRenderer->makeLink( $practiceGroupsUserMWUser->getUserPage(), $displayName );
                     } elseif( $practiceGroupsUser->getAffiliatedEmail() ) {
                         $nameHtml .= $practiceGroupsUser->getAffiliatedEmail();
                     }
@@ -584,8 +586,9 @@ class PracticeGroupDashboard {
 
             foreach( $activePracticeGroupsUsers as $practiceGroupsUser ) {
                 $practiceGroupsUserMWUser = $practiceGroupsUser->getUser();
+                $displayName = $practiceGroupsUserMWUser->getRealName() ?: $practiceGroupsUserMWUser->getName();
 
-                $nameHtml = $linkRenderer->makeLink( $practiceGroupsUserMWUser->getUserPage(), $practiceGroupsUserMWUser->getRealName() );
+                $nameHtml = $linkRenderer->makeLink( $practiceGroupsUserMWUser->getUserPage(), $displayName );
 
                 $statusText = '';
                 $buttons = '';

@@ -10,6 +10,11 @@ use User;
 class getUserPermissionsErrors {
     public static function callback( Title $title, User $user, $action, &$result ) {
         if( in_array( $title->getNamespace(), PracticeGroups::getPracticeGroupsNamespaces() ) ) {
+            # Practice group sysops can bypass permissions checks
+            if( $user->isRegistered() && PracticeGroups::isUserPracticeGroupSysop( $user ) ) {
+                return true;
+            }
+
             $practiceGroup = PracticeGroup::getFromDBKey( $title->getRootText() );
 
             if( !$practiceGroup ) {
