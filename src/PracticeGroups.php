@@ -372,7 +372,7 @@ class PracticeGroups {
             $title = Title::newFromText( $title );
         }
 
-        if( $title->getNamespace() != NS_PRACTICEGROUP ) {
+        if( !in_array( $title->getNamespace(), static::NAMESPACES ) ) {
             return false;
         }
 
@@ -443,7 +443,13 @@ class PracticeGroups {
         return true;
     }
 
-    public static function isUserPracticeGroupSysop( User $user ) {
+    /**
+     * @param User|null $user
+     * @return bool
+     */
+    public static function isUserPracticeGroupSysop( User $user = null ): bool {
+        $user = $user ?? RequestContext::getMain()->getUser();
+
         if( MediaWikiServices::getInstance()->getPermissionManager()->userHasRight(
                 $user,
                 'practicegroups-sysop'
@@ -684,17 +690,28 @@ class PracticeGroups {
     /**
      * This function returns whether a user should be able to read a practice group title.
      * If the title passed is not a practice group title, it will return false.
-     * @param Title $title
+     * @param Title|string $title
+     * @param User|null $user
      * @return bool
      */
-    public static function userCanReadPracticeGroupTitle( Title $title, $user = null ): bool {
+    public static function userCanReadPracticeGroupTitle( $title, User $user = null ): bool {
+        if( PracticeGroups::isUserPracticeGroupSysop( $user ) ) {
+            return true;
+        }
+
+        if( !$title ) {
+            return false;
+        } elseif( !$title instanceof Title ) {
+            $title = Title::newFromText( $title );
+        }
+
         $practiceGroup = PracticeGroups::getPracticeGroupFromTitle( $title );
 
         if( !$practiceGroup ) {
             return false;
         }
 
-        return $practiceGroup->userCanReadPage( $title->getArticleID() );
+        return $practiceGroup->userCanReadPage( $title->getArticleID(), $user );
     }
 
     /**

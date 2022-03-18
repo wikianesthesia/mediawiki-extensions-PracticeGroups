@@ -49,6 +49,11 @@ class PracticeGroup extends DatabaseClass {
             'source' => DatabaseClass::SOURCE_FIELD,
             'type' => DatabaseClass::TYPE_COLOR
         ], [
+            'name' => 'preserve_main_title_links',
+            'defaultValue' => 1,
+            'source' => DatabaseClass::SOURCE_FIELD,
+            'type' => DatabaseClass::TYPE_BOOLEAN
+        ], [
             'name' => 'view_by_public',
             'defaultValue' => 0,
             'source' => DatabaseClass::SOURCE_FIELD,
@@ -590,6 +595,13 @@ class PracticeGroup extends DatabaseClass {
         } else {
             return false;
         }
+    }
+
+    /**
+     * @return bool
+     */
+    public function preserveMainTitleLinks(): bool {
+        return (bool) $this->getValue( 'preserve_main_title_links' );
     }
 
     public function save( bool $test = false ): Status {

@@ -2,21 +2,17 @@
 
 namespace PracticeGroups\Hook;
 
-use ApiMain;
-use FauxRequest;
 use MediaWiki\Linker\LinkTarget;
 use MediaWiki\Logger\LoggerFactory;
 use MediaWiki\MediaWikiServices;
 use MediaWiki\Revision\RevisionRecord;
 use MediaWiki\User\UserIdentity;
 use PracticeGroups\PracticeGroups;
+use Status;
 use Title;
 
 class PageMoveComplete {
     public static function callback( LinkTarget $old, LinkTarget $new, UserIdentity $userIdentity, int $pageid, int $redirid, string $reason, RevisionRecord $revision  ) {
-        $movePageFactory = MediaWikiServices::getInstance()->getMovePageFactory();
-        $logger = LoggerFactory::getInstance( PracticeGroups::getExtensionName() );
-
         if( in_array( $old->getNamespace(), PracticeGroups::getPracticeGroupsNamespaces() ) ) {
             # TODO will eventually need to deal with renaming practice groups
 
@@ -25,85 +21,95 @@ class PageMoveComplete {
             return;
         }
 
-        // TODO can this be done without FauxRequesting the API?
-        // Regrettably, we can't use list=search since the search index might not reliably be updated, so
-        // pages might be missed. This could get expensive when the site gets big...
+        $dbr = MediaWikiServices::getInstance()->getDBLoadBalancer()->getConnectionRef( DB_REPLICA );
 
+        $table = 'page';
+        $vars = [
+            'page_namespace',
+            'page_title'
+        ];
+
+        $namespaceCond = '';
         foreach( PracticeGroups::getPracticeGroupsNamespaces() as $practiceGroupsNamespace ) {
-            $resultData = [
-                'continue' => [
-                    'apcontinue' => ''
-                ]
-            ];
+            if( $namespaceCond ) {
+                $namespaceCond .= ' OR ';
+            }
+            $namespaceCond .= 'page_namespace = ' . $dbr->addQuotes( $practiceGroupsNamespace );
+        }
 
-            while( isset( $resultData[ 'continue' ] ) ) {
-                $request = [
-                    'action' => 'query',
-                    'list' => 'allpages',
-                    'apnamespace' => $practiceGroupsNamespace,
-                    'apcontinue' => $resultData[ 'continue' ][ 'apcontinue' ],
-                    'aplimit' => 'max'
-                ];
+        // These two like conditions will search for titles which are subpages with exactly one level of depth
+        $conds = [
+            $namespaceCond,
+            'page_title ' . $dbr->buildLike( $dbr->anyString(), '/' . $old->getText() ),
+            'page_title NOT ' . $dbr->buildLike( $dbr->anyString(), '/', $dbr->anyString(), '/', $dbr->anyString() )
+        ];
 
-                $fauxReq = new FauxRequest( $request );
+        $res = $dbr->select(
+            $table,
+            $vars,
+            $conds,
+            __METHOD__
+        );
 
-                $module = new ApiMain( $fauxReq );
-                $module->execute();
+        foreach( $res as $row ) {
+            $oldPracticeGroupTitle = Title::newFromText( $row->page_title, NS_PRACTICEGROUP );
+            $practiceGroup = PracticeGroups::getPracticeGroupFromTitle( $oldPracticeGroupTitle );
 
-                $resultData = $module->getResult()->getResultData();
+            // Don't move pages if the practice group doesn't exist or is configured to not preserve main title links
+            if( !$practiceGroup || !$practiceGroup->preserveMainTitleLinks() ) {
+                continue;
+            }
 
-                $pageData = $module->getResult()->getResultData( [ 'query', 'allpages' ] );
+            // Get any subpages for the existing title.
+            // Getting now since not sure if getSubpages() will still work after the move.
+            $oldPracticeGroupTitleSubpages = $oldPracticeGroupTitle->getSubpages();
 
-                // Iterate through all pages in the PracticeGroup namespace to find subpages which match the moved article title
-                foreach( $pageData as $pageResult ) {
-                    if( isset( $pageResult[ 'pageid' ] ) ) {
-                        $practiceGroupsPageTitle = Title::newFromID( $pageResult[ 'pageid' ] );
+            // Create a new title for the subpage which matches the new article title
+            $newPracticeGroupTitle = Title::makeTitleSafe( $row->page_namespace, $practiceGroup->getDBKey() . '/' . $new->getText() );
 
-                        // Only subpages are relevant since they might match the moved article title
-                        if( $practiceGroupsPageTitle->isSubpage() ) {
+            $moveResult = static::movePracticeGroupPage( $oldPracticeGroupTitle, $newPracticeGroupTitle, $userIdentity );
 
-                            // See if the subpage text matches the old article title
-                            if( $old->getText() == PracticeGroups::getMainArticleTitle( $practiceGroupsPageTitle )->getText() ) {
+            if( $moveResult && count( $oldPracticeGroupTitleSubpages ) ) {
+                foreach( $oldPracticeGroupTitleSubpages as $oldPracticeGroupTitleSubpage ) {
+                    $newPracticeGroupTitleSubpageText = str_replace(
+                        $oldPracticeGroupTitle->getText(),
+                        $newPracticeGroupTitle->getText(),
+                        $oldPracticeGroupTitleSubpage->getText()
+                    );
 
-                                // Create a new title for the subpage which matches the new article title
-                                $newPracticeGroupsPageTitle = Title::makeTitleSafe( $pageResult[ 'ns' ], $practiceGroupsPageTitle->getRootText() . '/' . $new->getText() );
+                    $newPracticeGroupTitleSubpage = Title::makeTitleSafe( $row->page_namespace, $newPracticeGroupTitleSubpageText );
 
-                                $movePage = $movePageFactory->newMovePage( $practiceGroupsPageTitle, $newPracticeGroupsPageTitle );
-
-                                $moveValidResult = $movePage->isValidMove();
-
-                                if( !$newPracticeGroupsPageTitle->exists() && $moveValidResult->isOK() ) {
-                                    // Move the subpage. Redirects are important to keep any links in practice group pages working
-
-                                    $logger->debug( 'Attempting to move subpage from {old} to {new} in namespace {ns}', [
-                                        'old' => $old->getText(),
-                                        'new' => $new->getText(),
-                                        'ns' => $pageResult[ 'ns' ]
-                                    ] );
-
-                                    $movePage->move( $userIdentity, wfMessage( 'practicegroups-move-reason-mainarticlemoved' )->text(), false );
-                                } else {
-                                    # TODO i18n
-                                    $errorDetails = '';
-
-                                    if( $newPracticeGroupsPageTitle->exists() ) {
-                                        $errorDetails = 'New page already exists';
-                                    } elseif( !$moveValidResult->isOK() ) {
-                                        $errorDetails = $moveValidResult->getMessage()->text();
-                                    }
-
-                                    $logger->warning( 'Could not move subpage from {old} to {new} in namespace {ns}: {details}', [
-                                        'old' => $old->getText(),
-                                        'new' => $new->getText(),
-                                        'ns' => $pageResult[ 'ns' ],
-                                        $errorDetails
-                                    ] );
-                                }
-                            }
-                        }
-                    }
+                    // Don't bother checking the result since we should keep trying the other subpages even if one fails.
+                    static::movePracticeGroupPage( $oldPracticeGroupTitleSubpage, $newPracticeGroupTitleSubpage, $userIdentity );
                 }
             }
+        }
+    }
+
+    protected static function movePracticeGroupPage( Title $oldPracticeGroupTitle, Title $newPracticeGroupTitle, UserIdentity $userIdentity ): Status {
+        $movePageFactory = MediaWikiServices::getInstance()->getMovePageFactory();
+        $logger = LoggerFactory::getInstance( PracticeGroups::getExtensionName() );
+
+        $movePage = $movePageFactory->newMovePage( $oldPracticeGroupTitle, $newPracticeGroupTitle );
+        $moveValidResult = $movePage->isValidMove();
+
+        $loggerContext = [
+            'old' => $oldPracticeGroupTitle->getFullText(),
+            'new' => $newPracticeGroupTitle->getFullText(),
+        ];
+
+        // Make sure the move is valid (will check to make sure new title doesn't already exist)
+        if( $moveValidResult->isOK() ) {
+            $logger->debug( 'Attempting to move practice group page from {old} to {new} in namespace {ns} to preserve main title link', $loggerContext );
+
+            // Move the subpage. Redirects make things complicated (e.g. can't move and then move back)
+            return $movePage->move( $userIdentity, wfMessage( 'practicegroups-move-reason-maintitlemoved' )->text(), false );
+        } else {
+            $loggerContext[ 'details' ] = $moveValidResult->getMessage()->text();
+
+            $logger->error( 'Could not move subpage from {old} to {new} in namespace {ns}: {details}', $loggerContext );
+
+            return $moveValidResult;
         }
     }
 }

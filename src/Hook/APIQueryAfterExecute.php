@@ -61,13 +61,7 @@ class APIQueryAfterExecute {
 
             foreach( $results as $resultKey => $result ) {
                 if( isset( $result[ 'title'] ) && PracticeGroups::isTitlePracticeGroupArticle( $result[ 'title' ] ) ) {
-                    $blockResult = true;
-
-                    $practiceGroup = PracticeGroups::getPracticeGroupFromTitle( $result[ 'title' ] );
-
-                    if( $practiceGroup->userCanReadPage( $result[ 'pageid' ] ) ) {
-                        $blockResult = false;
-                    }
+                    $blockResult = !PracticeGroups::userCanReadPracticeGroupTitle( $result[ 'title' ], $user );
 
                     if( $blockResult ) {
                         $apiResult->removeValue( $path, $resultKey );

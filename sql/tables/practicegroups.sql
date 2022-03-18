@@ -5,6 +5,7 @@ CREATE TABLE /*_*/practicegroups (
   `name_short` VARCHAR(25) NOT NULL,
   `color_primary` VARCHAR(25) NULL,
   `color_secondary` VARCHAR(25) NULL,
+  `preserve_main_title_links` TINYINT(1) NOT NULL DEFAULT 1,
   `view_by_public` TINYINT(1) NOT NULL DEFAULT 0,
   `join_by_public` TINYINT(1) NOT NULL DEFAULT 0,
   `any_member_add_user` TINYINT(1) NOT NULL DEFAULT 0,

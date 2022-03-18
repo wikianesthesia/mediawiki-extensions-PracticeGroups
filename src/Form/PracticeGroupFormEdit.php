@@ -178,6 +178,30 @@ class PracticeGroupFormEdit extends PracticeGroupForm {
             'class' => 'form-row'
         ], $colorsHtml );
 
+        $name = 'behavior';
+        $html .= Html::rawElement( 'h4', [], static::getMessageText( $name ) );
+
+        $name = 'preserve_main_title_links';
+        $html .= BootstrapUI::radioInputWidget( [
+            'name' => $name,
+            'value' => $practiceGroup ? (int) static::getValue( $name, $practiceGroup ) : null, // Ignore default value
+            'options' => [ [
+                'label' => wfMessage( 'practicegroups-yes' )->text(),
+                'value' => 1
+            ], [
+                'label' => wfMessage( 'practicegroups-no' )->text(),
+                'value' => 0
+            ] ],
+            'required' => true,
+            'validation' => true,
+            'disabled' => $readOnly,
+            'id' => static::getElementIdForName( $name ),
+            'label' => static::getMessageText( $name, 'label' ),
+            'help' => static::getMessageText( $name, 'help' ),
+            'containerClass' => 'mt-3',
+            'inline' => true
+        ] );
+
         $name = 'privacyandmembershippolicysettings';
         $html .= Html::rawElement( 'h4', [], static::getMessageText( $name ) );
 
