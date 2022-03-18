@@ -19,6 +19,10 @@
             formData.color_primary = $( '#' + mw.practiceGroups.formEdit.formId + '-colorprimary' ).val();
             formData.color_secondary = $( '#' + mw.practiceGroups.formEdit.formId + '-colorsecondary' ).val();
 
+            if( $( "input[name='preserve_main_title_links']:checked" ).val() == 1 ) {
+                formData.preserve_main_title_links = '1';
+            }
+
             if( $( "input[name='view_by_public']:checked" ).val() == 1 ) {
                 formData.view_by_public = '1';
             }
@@ -133,6 +137,10 @@
                         mw.practiceGroups.common.updateFieldValidation( $( event.target ), true );
                     }
                 } );
+            } );
+
+            $( '[name="preserve_main_title_links"]' ).on( 'input', function( event ) {
+                mw.practiceGroups.common.updateFieldValidation( $( '[name="preserve_main_title_links"]' ), true );
             } );
 
             $( '[name="view_by_public"]' ).on( 'input', function( event ) {
@@ -300,6 +308,12 @@
                 var fauxError = {
                     'error': mw.practiceGroups.common.validationErrorRequiredMissing
                 };
+
+                if( $( '[name="preserve_main_title_links"]:checked' ).val() === undefined ) {
+                    mw.practiceGroups.common.updateFieldValidation( $( '[name="preserve_main_title_links"]' ), false, fauxError );
+
+                    isFormValid = false;
+                }
 
                 if( $( '[name="view_by_public"]:checked' ).val() === undefined ) {
                     mw.practiceGroups.common.updateFieldValidation( $( '[name="view_by_public"]' ), false, fauxError );

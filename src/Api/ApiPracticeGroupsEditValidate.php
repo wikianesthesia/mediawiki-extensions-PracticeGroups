@@ -77,6 +77,10 @@ class ApiPracticeGroupsEditValidate extends ApiPracticeGroupsBaseGet {
                 ApiBase::PARAM_REQUIRED => false,
                 ApiBase::PARAM_TYPE => 'string'
             ],
+            'preserve_main_title_links' => [
+                ApiBase::PARAM_REQUIRED => false,
+                ApiBase::PARAM_TYPE => 'boolean'
+            ],
             'view_by_public' => [
                 ApiBase::PARAM_REQUIRED => false,
                 ApiBase::PARAM_TYPE => 'boolean'

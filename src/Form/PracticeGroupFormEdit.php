@@ -184,7 +184,7 @@ class PracticeGroupFormEdit extends PracticeGroupForm {
         $name = 'preserve_main_title_links';
         $html .= BootstrapUI::radioInputWidget( [
             'name' => $name,
-            'value' => $practiceGroup ? (int) static::getValue( $name, $practiceGroup ) : null, // Ignore default value
+            'value' => (int) static::getValue( $name, $practiceGroup ), // Ignore default value
             'options' => [ [
                 'label' => wfMessage( 'practicegroups-yes' )->text(),
                 'value' => 1
