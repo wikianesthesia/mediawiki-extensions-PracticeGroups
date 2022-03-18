@@ -119,7 +119,7 @@ class PracticeGroup extends DatabaseClass {
         ]
     ];
 
-    protected static $myPracticeGroupsUser;
+    protected static $myPracticeGroupsUsers = [];
 
     /**
      * @return string
@@ -280,10 +280,6 @@ class PracticeGroup extends DatabaseClass {
      */
     public function canAnyMemberAddUser(): bool {
         return (bool) $this->getValue( 'any_member_add_user' );
-    }
-
-    public function canUserView( int $user_id ): bool {
-        return $this->canViewByPublic() || $this->isUserActiveMember( $user_id );
     }
 
     /**
@@ -462,8 +458,8 @@ class PracticeGroup extends DatabaseClass {
     public function getPracticeGroupsUserForUser( int $user_id ) {
         $isMyUser = RequestContext::getMain()->getUser()->isRegistered() && $user_id == RequestContext::getMain()->getUser()->getId();
 
-        if( $isMyUser && isset( static::$myPracticeGroupsUser ) ) {
-            return static::$myPracticeGroupsUser;
+        if( $isMyUser && isset( static::$myPracticeGroupsUsers[ $this->getId() ] ) ) {
+            return static::$myPracticeGroupsUsers[ $this->getId() ];
         }
 
         $practiceGroupsUser = PracticeGroupsUser::getAll( [
@@ -476,7 +472,7 @@ class PracticeGroup extends DatabaseClass {
         }
 
         if( $isMyUser ) {
-            static::$myPracticeGroupsUser = $practiceGroupsUser;
+            static::$myPracticeGroupsUsers[ $this->getId() ] = $practiceGroupsUser;
         }
 
         return $practiceGroupsUser;
@@ -632,7 +628,7 @@ class PracticeGroup extends DatabaseClass {
                 return $result;
             }
 
-            static::$myPracticeGroupsUser = $practiceGroupsUser;
+            static::$myPracticeGroupsUsers[ $this->getId() ] = $practiceGroupsUser;
         }
 
         if( $resultValue[ 'action' ] === static::ACTION_CREATE ) {
@@ -665,6 +661,18 @@ class PracticeGroup extends DatabaseClass {
         }
 
         return false;
+    }
+
+    /**
+     * @param null $user
+     * @return bool
+     */
+    public function userCanView( $user = null ): bool {
+        $user = $user ?? RequestContext::getMain()->getUser();
+
+        return $this->canViewByPublic() ||
+            $this->isUserActiveMember( $user->getId() ) ||
+            PracticeGroups::isUserPracticeGroupSysop( $user );
     }
 
     protected static function sortPracticeGroupsUsers( array $practiceGroupsUsers = [] ) {

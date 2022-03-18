@@ -79,11 +79,6 @@ class PracticeGroups {
 
     protected static $membershipButtonCount = [];
 
-    protected static $practiceGroupLinkedNamespaces = [];
-    protected static $practiceGroupNamespaces = [];
-    protected static $practiceGroupNotesNamespaces = [];
-    protected static $practiceGroupTalkNamespaces = [];
-
     public static function canTitleHavePracticeGroupArticle( $title ) {
         global $wgPracticeGroupsNotesBlacklistTitles, $wgPracticeGroupsNotesEnabledNamespaces;
 

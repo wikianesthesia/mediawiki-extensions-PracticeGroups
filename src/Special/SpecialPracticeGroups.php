@@ -211,7 +211,7 @@ class SpecialPracticeGroups extends SpecialPage {
 
                 $nameHtml = (string) $practiceGroup;
 
-                if( $this->getUser()->isRegistered() && $practiceGroup->canUserView( $this->getUser()->getId() ) ) {
+                if( $practiceGroup->userCanView( $this->getUser() ) ) {
                     # Show name as link
                     $nameHtml = $linkRenderer->makeKnownLink( $practiceGroup->getDashboardTitle(), (string) $practiceGroup );
                 }
