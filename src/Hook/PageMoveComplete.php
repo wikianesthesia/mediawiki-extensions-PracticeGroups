@@ -15,9 +15,9 @@ class PageMoveComplete {
     public static function callback( LinkTarget $old, LinkTarget $new, UserIdentity $userIdentity, int $pageid, int $redirid, string $reason, RevisionRecord $revision  ) {
         if( in_array( $old->getNamespace(), PracticeGroups::getPracticeGroupsNamespaces() ) ) {
             # TODO will eventually need to deal with renaming practice groups
-
             # Prevent infinite recursion
-
+            return;
+        } elseif( $old->getNamespace() !== NS_MAIN || $new->getNamespace() !== NS_MAIN ) {
             return;
         }
 

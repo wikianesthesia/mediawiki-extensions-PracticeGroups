@@ -643,7 +643,7 @@ class PracticeGroup extends DatabaseClass {
      * @param User|null $user
      * @return bool
      */
-    public function userCanReadPage( int $pageId, $user = null ) {
+    public function userCanReadPage( int $pageId, $user = null ): bool {
         $privacy = PracticeGroups::getEffectivePrivacyForPage( $pageId );
 
         if( $privacy === false ) {
