@@ -96,7 +96,7 @@
   "practicegroups-form-practicegroup-colorprimary-help": "Enter the hexadecimal value (3 or 6 digits) for the practice group's primary color (e.g. #006DE5)",
   "practicegroups-form-practicegroup-colorsecondary-label": "Secondary color",
   "practicegroups-form-practicegroup-colorsecondary-help": "Enter the hexadecimal value (3 or 6 digits) for the practice group's secondary color (e.g. #FFF)",
-  "practicegroups-form-practicegroup-behavior": "Behavior",
+  "practicegroups-form-practicegroup-articlesettings": "Article settings",
   "practicegroups-form-practicegroup-preservemaintitlelinks-label": "Should practice group articles preserve linkage to similar public articles when possible?",
   "practicegroups-form-practicegroup-preservemaintitlelinks-help": "If yes, when a public article is renamed that has a matching practice group article, the practice group article will be renamed to match the new public title. This is <b>highly</b> recommended, as it will ensure that relevant public content always remains easily accessible from practice group articles and in most circumstances will not have negative effects. A redirect from the old title to the new title will be created to preserve the functionality of any links to the article. However, if other practice group articles link to the renamed title, those links will need to be manually updated to target the new title.",
   "practicegroups-form-practicegroup-privacyandmembershippolicysettings": "Privacy and membership policy settings",

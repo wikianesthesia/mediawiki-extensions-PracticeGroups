@@ -178,7 +178,7 @@ class PracticeGroupFormEdit extends PracticeGroupForm {
             'class' => 'form-row'
         ], $colorsHtml );
 
-        $name = 'behavior';
+        $name = 'articlesettings';
         $html .= Html::rawElement( 'h4', [], static::getMessageText( $name ) );
 
         $name = 'preserve_main_title_links';
