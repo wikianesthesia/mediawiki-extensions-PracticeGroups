@@ -386,6 +386,14 @@ class PracticeGroups {
         return self::NAMESPACES;
     }
 
+    /**
+     * @param User $user
+     * @return PracticeGroupsUser[]
+     */
+    public static function getPracticeGroupsUsersForUser( User $user ): array {
+        return PracticeGroupsUser::getAllForUser( $user->getId() );
+    }
+
     public static function getUserIdForEmail( string $email ) {
         $clean_email = filter_var( $email,FILTER_SANITIZE_EMAIL );
 
