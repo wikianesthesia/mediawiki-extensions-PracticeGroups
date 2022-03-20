@@ -11,7 +11,8 @@
 
     mw.practiceGroups.dashboard = {
         createDialogExistingPracticeGroupTitles: [],
-        createDialogExistingPublicTitles: [],
+        createDialogExistingPublicTitlesFulltext: null,
+        createDialogExistingPublicTitlesPrefix: null,
         nsPracticeGroup: 7740,
         nsPracticeGroupNotes: 7742,
         practiceGroupId: null,
@@ -124,62 +125,148 @@
                 ).getUrl() + '?veaction=edit';
             } );
 
+            var maxResults = 5;
+
+            var updateExistingPublicTitles = function() {
+                // Only update if both queries have resulted
+                if( mw.practiceGroups.dashboard.createDialogExistingPublicTitlesPrefix == null ||
+                    mw.practiceGroups.dashboard.createDialogExistingPublicTitlesFulltext == null ) {
+                    return;
+                }
+
+                var existingPublicTitleList = $( '<div>', {
+                    'class': 'practicegroups-createarticle-searchresults'
+                } );
+
+                var resultCount = 0;
+                var displayedTitles = [];
+
+                for( var iTitle in mw.practiceGroups.dashboard.createDialogExistingPublicTitlesPrefix ) {
+                    if( resultCount >= maxResults ) {
+                        break;
+                    }
+
+                    var title = mw.practiceGroups.dashboard.createDialogExistingPublicTitlesPrefix[ iTitle ];
+
+                    if( displayedTitles.indexOf( title ) > -1 ) {
+                        continue;
+                    }
+
+                    existingPublicTitleList.append(
+                        $( '<a>', {
+                            'href': mw.Title.newFromText(
+                                'PracticeGroup:' + mw.practiceGroups.dashboard.practiceGroupDBKey + '/' + title
+                            ).getUrl() + '?veaction=edit'
+                        } ).append( title ), '<br/>'
+                    );
+
+                    displayedTitles.push( title );
+
+                    resultCount++;
+                }
+
+                for( var iTitle in mw.practiceGroups.dashboard.createDialogExistingPublicTitlesFulltext ) {
+                    if( resultCount >= maxResults ) {
+                        break;
+                    }
+
+                    var title = mw.practiceGroups.dashboard.createDialogExistingPublicTitlesFulltext[ iTitle ];
+
+                    if( displayedTitles.indexOf( title ) > -1 ) {
+                        continue;
+                    }
+
+                    existingPublicTitleList.append(
+                        $( '<a>', {
+                            'href': mw.Title.newFromText(
+                                'PracticeGroup:' + mw.practiceGroups.dashboard.practiceGroupDBKey + '/' + title
+                            ).getUrl() + '?veaction=edit'
+                        } ).append( title ), '<br/>'
+                    );
+
+                    displayedTitles.push( title );
+
+                    resultCount++;
+                }
+
+                $( '#modalCreateExistingPublicResults' ).html( resultCount ?
+                    existingPublicTitleList :
+                    existingPublicResultsDefault
+                );
+            };
+
             $( '#modalCreateTitle' ).on( 'input', function() {
                 if( $( this ).val() ) {
+                    // Capitalize the first letter
                     $( this ).val( $( this ).val().charAt( 0 ).toUpperCase() + $( this ).val().slice( 1 ) );
 
                     $( '#modalCreateProceed' ).prop( 'disabled', false );
 
-                    var maxRows = 5;
+                    mw.practiceGroups.dashboard.createDialogExistingPublicTitlesPrefix = null;
+                    mw.practiceGroups.dashboard.createDialogExistingPublicTitlesFulltext = null;
 
-                    var api = new mw.Api();
-
-                    api.get( {
+                    var apiParams = {
                         'action': 'query',
-                        'list': 'search',
-                        'srsearch': 'intitle:' + $( '#modalCreateTitle').val(),
-                        'srnamespace': '0',
-                        'srprop': '',
-                        'srlimit': maxRows
-                    } ).done( function ( apiResult ) {
-                        mw.practiceGroups.dashboard.createDialogExistingPracticeGroupTitles = [];
-                        mw.practiceGroups.dashboard.createDialogExistingPublicTitles = [];
+                        'list': 'prefixsearch',
+                        'pssearch': $( '#modalCreateTitle').val(),
+                        'pslimit': maxResults
+                    };
 
-                        var iResult = 0;
+                    new mw.Api().get( apiParams ).done( function ( apiResult ) {
+                        mw.practiceGroups.dashboard.createDialogExistingPublicTitlesPrefix = [];
 
-                        var existingPublicTitleList = $( '<div>', {
-                            'class': 'practicegroups-createarticle-searchresults'
-                        } );
-
-                        while( mw.practiceGroups.dashboard.createDialogExistingPublicTitles.length < maxRows && iResult < apiResult.query.search.length ) {
-                            if( apiResult.query.search[ iResult ].hasOwnProperty( 'title' ) ) {
-                                mw.practiceGroups.dashboard.createDialogExistingPublicTitles.push( apiResult.query.search[ iResult ].title );
-
-                                existingPublicTitleList.append(
-                                    $( '<a>', {
-                                        'href': mw.Title.newFromText(
-                                            'PracticeGroup:' + mw.practiceGroups.dashboard.practiceGroupDBKey + '/' + apiResult.query.search[ iResult ].title
-                                        ).getUrl() + '?veaction=edit'
-                                    } ).append( apiResult.query.search[ iResult ].title ), '<br/>'
-                                );
+                        for( var iResult in apiResult.query.prefixsearch ) {
+                            if( apiResult.query.prefixsearch[ iResult ].ns === 0 ) {
+                                mw.practiceGroups.dashboard.createDialogExistingPublicTitlesPrefix.push( apiResult.query.prefixsearch[ iResult ].title );
                             }
-
-                            iResult++;
                         }
 
-                        var existingPracticeGroupTitleList = $( '<div>', {
-                            'class': 'practicegroups-createarticle-searchresults'
-                        } );
+                        updateExistingPublicTitles();
+                    } );
 
-                        var tableArticlesData = $( '#table-articles' ).DataTable().data().toArray();
+                    apiParams = {
+                        'action': 'query',
+                        'list': 'search',
+                        'srsearch': $( '#modalCreateTitle').val(),
+                        'srnamespace': 0,
+                        'srprop': '',
+                        'srlimit': maxResults
+                    };
 
-                        for( var i in tableArticlesData ) {
-                            var existingArticleTitle = tableArticlesData[ i ][ 0 ].replace( /(<([^>]+)>)/gi , "");
-                            var existingArticleTitleWords = existingArticleTitle.toLowerCase().split( ' ' );
+                    new mw.Api().get( apiParams ).done( function ( apiResult ) {
+                        mw.practiceGroups.dashboard.createDialogExistingPublicTitlesFulltext = [];
 
-                            var newTitleWords = $( '#modalCreateTitle').val().toLowerCase().split( ' ' );
+                        for( var iResult in apiResult.query.search ) {
+                            if( apiResult.query.search[ iResult ].ns === 0 ) {
+                                mw.practiceGroups.dashboard.createDialogExistingPublicTitlesFulltext.push( apiResult.query.search[ iResult ].title );
+                            }
+                        }
 
-                            var titleMatch = false;
+                        updateExistingPublicTitles();
+                    } );
+
+                    mw.practiceGroups.dashboard.createDialogExistingPracticeGroupTitles = [];
+
+                    var existingPracticeGroupTitleList = $( '<div>', {
+                        'class': 'practicegroups-createarticle-searchresults'
+                    } );
+
+                    var tableArticlesData = $( '#table-articles' ).DataTable().data().toArray();
+
+                    var newTitleLower = $( '#modalCreateTitle').val().toLowerCase();
+                    var newTitleWords = newTitleLower.split( ' ' );
+
+                    for( var i in tableArticlesData ) {
+                        var titleMatch = false;
+                        var existingArticleTitle = tableArticlesData[ i ][ 0 ].replace( /(<([^>]+)>)/gi , '' );
+                        var existingArticleTitleLower = existingArticleTitle.toLowerCase();
+
+                        // Prefix search
+                        if( existingArticleTitleLower.indexOf( newTitleLower ) === 0 ) {
+                            titleMatch = true;
+                        } else {
+                            // Word search
+                            var existingArticleTitleWords = existingArticleTitleLower.split( ' ' );
 
                             for( var iExistingArticleTitleWord in existingArticleTitleWords ) {
                                 for( var iNewTitleWord in newTitleWords ) {
@@ -190,24 +277,19 @@
                                     }
                                 }
                             }
-
-                            if( titleMatch ) {
-                                mw.practiceGroups.dashboard.createDialogExistingPracticeGroupTitles.push( existingArticleTitle );
-
-                                existingPracticeGroupTitleList.append( existingArticleTitle, '<br/>' );
-                            }
                         }
 
-                        $( '#modalCreateExistingPublicResults' ).html( mw.practiceGroups.dashboard.createDialogExistingPublicTitles.length
-                            ? existingPublicTitleList
-                            : existingPublicResultsDefault
-                        );
+                        if( titleMatch ) {
+                            mw.practiceGroups.dashboard.createDialogExistingPracticeGroupTitles.push( existingArticleTitle );
 
-                        $( '#modalCreateExistingPracticeGroupResults' ).html( mw.practiceGroups.dashboard.createDialogExistingPracticeGroupTitles.length
-                            ? existingPracticeGroupTitleList
-                            :existingPracticeGroupResultsDefault
-                        );
-                    } );
+                            existingPracticeGroupTitleList.append( existingArticleTitle, '<br/>' );
+                        }
+                    }
+
+                    $( '#modalCreateExistingPracticeGroupResults' ).html( mw.practiceGroups.dashboard.createDialogExistingPracticeGroupTitles.length ?
+                        existingPracticeGroupTitleList :
+                        existingPracticeGroupResultsDefault
+                    );
                 } else {
                     $( '#modalCreateExistingPublicResults' ).html( existingPublicResultsDefault );
                     $( '#modalCreateExistingPracticeGroupResults' ).html( existingPracticeGroupResultsDefault );
