@@ -352,22 +352,30 @@ class PracticeGroup extends DatabaseClass {
         return (String) $this->getValue( 'name_full' );
     }
 
-    public function getFullURL(): string {
+    public function getFullURL( string $fragment = '', string $query = '' ): string {
         $dashboardTitle = $this->getDashboardTitle();
 
-        return $dashboardTitle ? $dashboardTitle->getFullURL() : '';
+        if( $fragment ) {
+            $dashboardTitle->setFragment( $fragment );
+        }
+
+        return $dashboardTitle ? $dashboardTitle->getFullURL( $query ) : '';
     }
 
-    public function getLinkURL(): string {
+    public function getLinkURL( string $fragment = '', string $query = '' ): string {
         $dashboardTitle = $this->getDashboardTitle();
 
-        return $dashboardTitle ? $dashboardTitle->getLinkURL() : '';
+        if( $fragment ) {
+            $dashboardTitle->setFragment( $fragment );
+        }
+
+        return $dashboardTitle ? $dashboardTitle->getLinkURL( $query ) : '';
     }
 
     /**
      * @return Title|null
      */
-    public function getDashboardTitle() {
+    public function getDashboardTitle(): ?Title {
         if( !$this->getDBKey() ) {
             return null;
         }
