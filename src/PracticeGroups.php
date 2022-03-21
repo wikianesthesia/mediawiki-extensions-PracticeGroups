@@ -391,7 +391,9 @@ class PracticeGroups {
      * @return PracticeGroupsUser[]
      */
     public static function getPracticeGroupsUsersForUser( User $user ): array {
-        return PracticeGroupsUser::getAllForUser( $user->getId() );
+        return $user->isRegistered() ?
+            PracticeGroupsUser::getAllForUser( $user->getId() ) :
+            [];
     }
 
     public static function getUserIdForEmail( string $email ) {
