@@ -4,6 +4,7 @@ namespace PracticeGroups\DatabaseClass;
 
 use DatabaseClasses\DatabaseClass;
 use Hooks;
+use MediaWiki\MediaWikiServices;
 use PracticeGroups\PracticeGroups;
 use RequestContext;
 use Status;
@@ -118,8 +119,6 @@ class PracticeGroup extends DatabaseClass {
             [ 'name_short' ]
         ]
     ];
-
-    protected static $myPracticeGroupsUsers = [];
 
     /**
      * @return string
@@ -287,6 +286,17 @@ class PracticeGroup extends DatabaseClass {
      */
     public function canViewByPublic(): bool {
         return (bool) $this->getValue( 'view_by_public' );
+    }
+
+    public function delete( bool $test = false ): Status {
+        $result = parent::delete( $test );
+
+        if( !$test ) {
+            // Purge regardless of whether the user is a member
+            PracticeGroups::purgeMyPracticeGroupsUsers();
+        }
+
+        return $result;
     }
 
     /**
@@ -460,30 +470,11 @@ class PracticeGroup extends DatabaseClass {
     }
 
     /**
-     * @param int $user_id
+     * @param User $user
      * @return false|PracticeGroupsUser
      */
-    public function getPracticeGroupsUserForUser( int $user_id ) {
-        $isMyUser = RequestContext::getMain()->getUser()->isRegistered() && $user_id == RequestContext::getMain()->getUser()->getId();
-
-        if( $isMyUser && isset( static::$myPracticeGroupsUsers[ $this->getId() ] ) ) {
-            return static::$myPracticeGroupsUsers[ $this->getId() ];
-        }
-
-        $practiceGroupsUser = PracticeGroupsUser::getAll( [
-            'practicegroup_id' => $this->getValue( 'practicegroup_id' ),
-            'user_id' => $user_id
-        ] );
-
-        if( $practiceGroupsUser ) {
-            $practiceGroupsUser = array_shift( $practiceGroupsUser );
-        }
-
-        if( $isMyUser ) {
-            static::$myPracticeGroupsUsers[ $this->getId() ] = $practiceGroupsUser;
-        }
-
-        return $practiceGroupsUser;
+    public function getPracticeGroupsUserForUser( User $user ) {
+        return PracticeGroups::getPracticeGroupsUserForUser( $this, $user );
     }
 
     /**
@@ -523,7 +514,7 @@ class PracticeGroup extends DatabaseClass {
         }
 
         # All other actions require the requesting user to be an administrator of the practice group
-        $myPracticeGroupsUser = $this->getPracticeGroupsUserForUser( $myUser->getId() );
+        $myPracticeGroupsUser = $this->getPracticeGroupsUserForUser( $myUser );
 
         if( !$myPracticeGroupsUser ) {
             # Requesting user is not in the practice group
@@ -559,11 +550,11 @@ class PracticeGroup extends DatabaseClass {
 
 
     /**
-     * @param int $user_id
+     * @param User $user
      * @return bool
      */
-    public function isUserAdmin( int $user_id ): bool {
-        $practiceGroupsUser = $this->getPracticeGroupsUserForUser( $user_id );
+    public function isUserAdmin( User $user ): bool {
+        $practiceGroupsUser = $this->getPracticeGroupsUserForUser( $user );
 
         if( $practiceGroupsUser && $practiceGroupsUser->isAdmin() ) {
             return true;
@@ -574,11 +565,11 @@ class PracticeGroup extends DatabaseClass {
 
 
     /**
-     * @param int $user_id
+     * @param User $user
      * @return bool
      */
-    public function isUserActiveMember( int $user_id ): bool {
-        $practiceGroupsUser = $this->getPracticeGroupsUserForUser( $user_id );
+    public function isUserActiveMember( User $user ): bool {
+        $practiceGroupsUser = $this->getPracticeGroupsUserForUser( $user );
 
         if( $practiceGroupsUser && $practiceGroupsUser->isActive() ) {
             return true;
@@ -588,11 +579,11 @@ class PracticeGroup extends DatabaseClass {
     }
 
     /**
-     * @param int $user_id
+     * @param User $user
      * @return bool
      */
-    public function isUserPendingMember( int $user_id ): bool {
-        $practiceGroupsUser = $this->getPracticeGroupsUserForUser( $user_id );
+    public function isUserPendingMember( User $user ): bool {
+        $practiceGroupsUser = $this->getPracticeGroupsUserForUser( $user );
 
         if( $practiceGroupsUser && $practiceGroupsUser->isPending() ) {
             return true;
@@ -616,31 +607,33 @@ class PracticeGroup extends DatabaseClass {
             return $result;
         }
 
-        if( !count( $this->getActivePracticeGroupsUsers() ) ) {
-            # This should only happen when a practice group was just created.
-            # In this case, we should create a new administrator practice group user for the requesting user.
-            # hasRight() asserts that the user exists and is logged in, so we can skip that check here.
-            $myUser = RequestContext::getMain()->getUser();
+        if( !$test ) {
+            if( !count( $this->getActivePracticeGroupsUsers() ) ) {
+                # This should only happen when a practice group was just created.
+                # In this case, we should create a new administrator practice group user for the requesting user.
+                # hasRight() asserts that the user exists and is logged in, so we can skip that check here.
+                $myUser = RequestContext::getMain()->getUser();
 
-            $practiceGroupsUser = PracticeGroupsUser::newFromValues( [
-                'practicegroup_id' => $this->getValue( 'practicegroup_id' ),
-                'user_id' => $myUser->getId(),
-                'admin' => 1,
-                'active_since' => time(),
-                'approved_by_user_id' => $myUser->getId()
-            ] );
+                $practiceGroupsUser = PracticeGroupsUser::newFromValues( [
+                    'practicegroup_id' => $this->getValue( 'practicegroup_id' ),
+                    'user_id' => $myUser->getId(),
+                    'admin' => 1,
+                    'active_since' => time(),
+                    'approved_by_user_id' => $myUser->getId()
+                ] );
 
-            $result = $practiceGroupsUser->save();
+                $result = $practiceGroupsUser->save();
 
-            if( !$result->isOK() ) {
-                return $result;
+                if( !$result->isOK() ) {
+                    return $result;
+                }
+
+                PracticeGroups::purgeMyPracticeGroupsUsers();
             }
 
-            static::$myPracticeGroupsUsers[ $this->getId() ] = $practiceGroupsUser;
-        }
-
-        if( $resultValue[ 'action' ] === static::ACTION_CREATE ) {
-            Hooks::run( 'PracticeGroupCreated', [ $this ] );
+            if( $resultValue[ 'action' ] === static::ACTION_CREATE ) {
+                Hooks::run( 'PracticeGroupCreated', [ $this ] );
+            }
         }
 
         return $result;
@@ -663,7 +656,7 @@ class PracticeGroup extends DatabaseClass {
         } else {
             $user = $user ?? RequestContext::getMain()->getUser();
 
-            if( $user->isRegistered() && $this->isUserActiveMember( $user->getId() ) ) {
+            if( $user->isRegistered() && $this->isUserActiveMember( $user ) ) {
                 return true;
             }
         }
@@ -679,7 +672,7 @@ class PracticeGroup extends DatabaseClass {
         $user = $user ?? RequestContext::getMain()->getUser();
 
         return $this->canViewByPublic() ||
-            $this->isUserActiveMember( $user->getId() ) ||
+            $this->isUserActiveMember( $user ) ||
             PracticeGroups::isUserPracticeGroupSysop( $user );
     }
 

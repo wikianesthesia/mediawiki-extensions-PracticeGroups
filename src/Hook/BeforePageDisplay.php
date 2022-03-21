@@ -22,7 +22,7 @@ class BeforePageDisplay {
     public static function callback( OutputPage &$out, Skin &$skin ) {
         $out->addModules( 'ext.practiceGroups.searchSuggest' );
 
-        $practiceGroupsUsers = PracticeGroupsUser::getAllForUser( $out->getUser()->getId() );
+        $practiceGroupsUsers = PracticeGroups::getPracticeGroupsUsersForUser( $out->getUser() );
 
         foreach( $practiceGroupsUsers as $practiceGroupsUser ) {
             $practiceGroup = $practiceGroupsUser->getPracticeGroup();

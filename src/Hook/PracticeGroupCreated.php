@@ -33,7 +33,7 @@ class PracticeGroupCreated {
                 wfMessage( 'practicegroups-createhomepage-usernotloggedin' )->text()
             );
             return;
-        } elseif( !$practiceGroup->isUserActiveMember( $user->getId() ) ) {
+        } elseif( !$practiceGroup->isUserActiveMember( $user ) ) {
             $logger->error(
                 __METHOD__ . ': ' .
                 wfMessage(

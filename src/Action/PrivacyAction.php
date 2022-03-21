@@ -38,7 +38,7 @@ class PrivacyAction extends Action {
             return;
         }
 
-        if( !$user->isRegistered() || !$practiceGroup->isUserAdmin( $user->getId() ) ) {
+        if( !$user->isRegistered() || !$practiceGroup->isUserAdmin( $user ) ) {
             return;
         }
 

@@ -35,7 +35,7 @@ class PracticeGroupFormEdit extends PracticeGroupForm {
                 return $html;
             }
 
-            $myPracticeGroupsUser = $practiceGroup->getPracticeGroupsUserForUser( $user->getId() );
+            $myPracticeGroupsUser = $practiceGroup->getPracticeGroupsUserForUser( $user );
 
             if( !$myPracticeGroupsUser ) {
                 return $html;

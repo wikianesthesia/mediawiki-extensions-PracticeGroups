@@ -41,7 +41,7 @@ class getUserPermissionsErrors {
                 return false;
             }
 
-            $practiceGroupsUser = $practiceGroup->getPracticeGroupsUserForUser( $user->getId() );
+            $practiceGroupsUser = $practiceGroup->getPracticeGroupsUserForUser( $user );
 
             if( ( !$practiceGroupsUser || !$practiceGroupsUser->isActive() ) ) {
                 $result = 'practicegroups-error-permissiondenied';

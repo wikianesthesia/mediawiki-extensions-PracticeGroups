@@ -6,6 +6,7 @@ use DatabaseClasses\DatabaseClass;
 use DatabaseClasses\DatabaseProperty;
 use Hooks;
 use MailAddress;
+use MediaWiki\MediaWikiServices;
 use PracticeGroups\PracticeGroups;
 use RequestContext;
 use Status;
@@ -129,15 +130,6 @@ class PracticeGroupsUser extends DatabaseClass {
      * @return static[]|false
      * @throws \MWException
      */
-    public static function getAllForUser( int $userId ) {
-        return static::getAll( [ 'user_id' => $userId ] );
-    }
-
-    /**
-     * @param int $userId
-     * @return static[]|false
-     * @throws \MWException
-     */
     public static function getAllInvitedByUser( int $userId ) {
         #TODO
         return [];
@@ -194,7 +186,22 @@ class PracticeGroupsUser extends DatabaseClass {
             return $result;
         }
 
-        return parent::delete( $test );
+        $userId = $this->getUserId();
+
+        $result = parent::delete( $test );
+
+        if( !$test && $userId === RequestContext::getMain()->getUser()->getId() ) {
+            PracticeGroups::purgeMyPracticeGroupsUsers();
+        }
+
+        return $result;
+    }
+
+    /**
+     * @return string|false
+     */
+    public function getAffiliatedEmail() {
+        return $this->getValue( 'affiliated_email' );
     }
 
     /**
@@ -205,10 +212,10 @@ class PracticeGroupsUser extends DatabaseClass {
     }
 
     /**
-     * @return string|false
+     * @return int|false
      */
-    public function getAffiliatedEmail() {
-        return $this->getValue( 'affiliated_email' );
+    public function getPracticeGroupId() {
+        return $this->getValue( 'practicegroup_id' );
     }
 
     /**
@@ -266,7 +273,7 @@ class PracticeGroupsUser extends DatabaseClass {
         $user = $this->getUser();
 
         # Get the PracticeGroupsUser for the requesting user. This may or may not exist.
-        $myPracticeGroupsUser = $practiceGroup->getPracticeGroupsUserForUser( $myUser->getId() );
+        $myPracticeGroupsUser = $practiceGroup->getPracticeGroupsUserForUser( $myUser );
 
         ##
         # Some initial sanity checks which are relevant for any user not being deleted from the database
@@ -323,7 +330,7 @@ class PracticeGroupsUser extends DatabaseClass {
             }
 
             # Allow duplicate entries for user_id only with user_id = 0
-            if( $this->getValue( 'user_id' ) && $practiceGroup->getPracticeGroupsUserForUser( $this->getValue( 'user_id' ) ) ) {
+            if( $this->getValue( 'user_id' ) && $practiceGroup->getPracticeGroupsUserForUser( $user ) ) {
                 $result->fatal( 'practicegroups-error-practicegroupsuser-alreadyexists' );
 
                 return $result;
@@ -963,6 +970,10 @@ class PracticeGroupsUser extends DatabaseClass {
         # before calling any post-save operations.
         $this->affiliatedEmailVerified = false;
 
+        if( !$test && $this->getUserId() === RequestContext::getMain()->getUser()->getId() ) {
+            PracticeGroups::purgeMyPracticeGroupsUsers();
+        }
+
         if( !$result->isOK() ) {
             return $result;
         }
@@ -1228,7 +1239,8 @@ class PracticeGroupsUser extends DatabaseClass {
         if( $userId != $dbPracticeGroupsUser->getValue( 'user_id' ) ) {
             # Existing user id will be 0. Need to make sure the user id we're about to assign isn't
             # already a member of the practice group
-            if( $practiceGroup->getPracticeGroupsUserForUser( $userId ) ) {
+            if( $practiceGroup->getPracticeGroupsUserForUser(
+                MediaWikiServices::getInstance()->getUserFactory()->newFromId( $userId ) ) ) {
                 $result->fatal( 'practicegroups-error-practicegroupsuser-alreadyexists' );
 
                 return $result;

@@ -2,7 +2,7 @@
 
 namespace PracticeGroups\Hook;
 
-use PracticeGroups\DatabaseClass\PracticeGroupsUser;
+use PracticeGroups\PracticeGroups;
 use SkinTemplate;
 use Title;
 
@@ -14,7 +14,7 @@ class PersonalUrls {
             return;
         }
 
-        $practiceGroupsUsers = PracticeGroupsUser::getAllForUser( $user->getId() );
+        $practiceGroupsUsers = PracticeGroups::getPracticeGroupsUsersForUser( $user );
 
         $practiceGroupsNotificationCount = 0;
 

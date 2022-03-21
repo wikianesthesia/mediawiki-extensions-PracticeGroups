@@ -81,7 +81,7 @@ class PracticeGroupDashboard {
 
         $practiceGroup = $this->getPracticeGroup();
 
-        $myPracticeGroupsUser = $practiceGroup->getPracticeGroupsUserForUser( $out->getUser()->getId() );
+        $myPracticeGroupsUser = $practiceGroup->getPracticeGroupsUserForUser( $out->getUser() );
 
         $navManager = BootstrapUI::getNavManager();
 
@@ -296,7 +296,7 @@ class PracticeGroupDashboard {
 
         $practiceGroup = $this->getPracticeGroup();
 
-        $myPracticeGroupsUser = $practiceGroup->getPracticeGroupsUserForUser( $out->getUser()->getId() );
+        $myPracticeGroupsUser = $practiceGroup->getPracticeGroupsUserForUser( $out->getUser() );
         $myPracticeGroupsUserAdmin = $myPracticeGroupsUser ? $myPracticeGroupsUser->isAdmin() : false;
 
         $linkRenderer = MediaWikiServices::getInstance()->getLinkRenderer();

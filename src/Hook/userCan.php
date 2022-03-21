@@ -28,7 +28,7 @@ class userCan {
             $practiceGroup = PracticeGroup::getFromDBKey( $title->getRootText() );
 
             if( $practiceGroup ) {
-                $practiceGroupsUser = $practiceGroup->getPracticeGroupsUserForUser( $user->getId() );
+                $practiceGroupsUser = $practiceGroup->getPracticeGroupsUserForUser( $user );
 
                 if( $practiceGroupsUser && $practiceGroupsUser->isActive() ) {
                     $allowedPracticeGroupUserActions = [

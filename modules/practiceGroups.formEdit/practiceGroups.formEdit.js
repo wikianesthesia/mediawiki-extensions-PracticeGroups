@@ -184,6 +184,8 @@
             } );
 
             $( '#form-practicegroup-save' ).click( function() {
+                $( '#form-practicegroup-save' ).prop( 'disabled', true );
+
                 mw.practiceGroups.formEdit.submit();
             } );
 
@@ -237,6 +239,8 @@
                         }
                     } else {
                         mw.practiceGroups.common.showAlert( result.practicegroups[ pgaction ].message, 'danger' );
+
+                        $( '#form-practicegroup-save' ).prop( 'disabled', false );
                     }
                 } );
             };

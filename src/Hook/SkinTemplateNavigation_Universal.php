@@ -19,7 +19,7 @@ class SkinTemplateNavigation_Universal {
         }
 
         if( $skinTemplate->getUser()->isRegistered() ) {
-            $practiceGroupsUser = $practiceGroup->getPracticeGroupsUserForUser( $skinTemplate->getUser()->getId() );
+            $practiceGroupsUser = $practiceGroup->getPracticeGroupsUserForUser( $skinTemplate->getUser() );
 
             if( $practiceGroupsUser && $practiceGroupsUser->isAdmin() ) {
                 $request = $skinTemplate->getRequest();
@@ -125,7 +125,7 @@ class SkinTemplateNavigation_Universal {
             if( in_array( $titleNamespaceText, $wgPracticeGroupsNotesEnabledNamespaces )
                 && !in_array( $title->getDBkey(), $wgPracticeGroupsNotesBlacklistTitles ) ) {
 
-                $practiceGroupsUsers = PracticeGroupsUser::getAllForUser( $skinTemplate->getUser()->getId() );
+                $practiceGroupsUsers = PracticeGroups::getPracticeGroupsUsersForUser( $skinTemplate->getUser() );
 
                 foreach( $practiceGroupsUsers as $practiceGroupsUser ) {
                     if( $practiceGroupsUser->isActive() ) {

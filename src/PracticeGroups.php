@@ -77,7 +77,9 @@ class PracticeGroups {
         ]
     ];
 
+    protected static $allowedPracticeGroups;
     protected static $membershipButtonCount = [];
+    protected static $myPracticeGroupsUsers;
 
     public static function canTitleHavePracticeGroupArticle( $title ) {
         global $wgPracticeGroupsNotesBlacklistTitles, $wgPracticeGroupsNotesEnabledNamespaces;
@@ -106,24 +108,28 @@ class PracticeGroups {
      * @return false|PracticeGroup[]
      */
     public static function getAllAllowedPracticeGroups() {
-        $allowedPracticeGroups = static::getAllPublicPracticeGroups();
+        if( !isset( static::$allowedPracticeGroups ) ) {
+            $allowedPracticeGroups = static::getAllPublicPracticeGroups();
 
-        $user = RequestContext::getMain()->getUser();
+            $user = RequestContext::getMain()->getUser();
 
-        if( $user->isRegistered() ) {
-            $practiceGroupsUsers = PracticeGroupsUser::getAllForUser( $user->getId() );
+            if( $user->isRegistered() ) {
+                $practiceGroupsUsers = static::getPracticeGroupsUsersForUser( $user );;
 
-            foreach( $practiceGroupsUsers as $practiceGroupsUser ) {
-                $practiceGroup = $practiceGroupsUser->getPracticeGroup();
+                foreach( $practiceGroupsUsers as $practiceGroupsUser ) {
+                    $practiceGroup = $practiceGroupsUser->getPracticeGroup();
 
-                if( !array_key_exists( $practiceGroup->getId(), $allowedPracticeGroups ) &&
-                    $practiceGroupsUser->isActive() ) {
-                    $allowedPracticeGroups[ $practiceGroup->getId() ] = $practiceGroup;
+                    if( !array_key_exists( $practiceGroup->getId(), $allowedPracticeGroups ) &&
+                        $practiceGroupsUser->isActive() ) {
+                        $allowedPracticeGroups[ $practiceGroup->getId() ] = $practiceGroup;
+                    }
                 }
             }
+
+            static::$allowedPracticeGroups = $allowedPracticeGroups;
         }
 
-        return $allowedPracticeGroups;
+        return static::$allowedPracticeGroups;
     }
 
     /**
@@ -386,14 +392,66 @@ class PracticeGroups {
         return self::NAMESPACES;
     }
 
+    public static function getPracticeGroupsUserForUser( PracticeGroup $practiceGroup, User $user = null ): ?PracticeGroupsUser {
+        $user = $user ?? RequestContext::getMain()->getUser();
+
+        if( !$user->isRegistered() ) {
+            return null;
+        }
+
+        $isMyUser = $user->getId() === RequestContext::getMain()->getUser()->getId();
+
+        if( $isMyUser ) {
+            if( !isset( static::$myPracticeGroupsUsers ) ) {
+                // If we're going to have to do a lookup anyway, might as well load and cache all the PracticeGroupsUsers
+                static::getPracticeGroupsUsersForUser( $user );
+            }
+
+            return static::$myPracticeGroupsUsers[ $practiceGroup->getId() ] ?? null;
+        }
+
+        $practiceGroupsUser = PracticeGroupsUser::getAll( [
+            'practicegroup_id' => $practiceGroup->getId(),
+            'user_id' => $user->getId()
+        ] );
+
+        if( $practiceGroupsUser ) {
+            $practiceGroupsUser = array_shift( $practiceGroupsUser );
+        } else {
+            $practiceGroupsUser = null;
+        }
+
+        return $practiceGroupsUser;
+    }
+
     /**
      * @param User $user
      * @return PracticeGroupsUser[]
      */
-    public static function getPracticeGroupsUsersForUser( User $user ): array {
-        return $user->isRegistered() ?
-            PracticeGroupsUser::getAllForUser( $user->getId() ) :
-            [];
+    public static function getPracticeGroupsUsersForUser( User $user = null ): array {
+        $user = $user ?? RequestContext::getMain()->getUser();
+
+        if( !$user->isRegistered() ) {
+            return [];
+        }
+
+        $isMyUser = $user->getId() === RequestContext::getMain()->getUser()->getId();
+
+        if( $isMyUser && isset( static::$myPracticeGroupsUsers ) ) {
+            return static::$myPracticeGroupsUsers;
+        }
+
+        $queriedPracticeGroupsUsers = PracticeGroupsUser::getAll( [ 'user_id' => $user->getId() ] ) ?: [];
+        $practiceGroupsUsers = [];
+        foreach( $queriedPracticeGroupsUsers as $practiceGroupsUser ) {
+            $practiceGroupsUsers[ $practiceGroupsUser->getPracticeGroupId() ] = $practiceGroupsUser;
+        }
+
+        if( $isMyUser ) {
+            static::$myPracticeGroupsUsers = $practiceGroupsUsers;
+        }
+
+        return $practiceGroupsUsers;
     }
 
     public static function getUserIdForEmail( string $email ) {
@@ -466,6 +524,10 @@ class PracticeGroups {
         return false;
     }
 
+    public static function purgeMyPracticeGroupsUsers() {
+        static::$myPracticeGroupsUsers = null;
+    }
+
     /**
      * @param string $search
      * @return false|Title[]
@@ -475,13 +537,13 @@ class PracticeGroups {
             return false;
         }
 
-        $myUser = RequestContext::getMain()->getUser();
+        $user = RequestContext::getMain()->getUser();
 
-        if( !$myUser->isRegistered() ) {
+        if( !$user->isRegistered() ) {
             return false;
         }
 
-        $myPracticeGroupsUsers = PracticeGroupsUser::getAllForUser( $myUser->getId() );
+        $myPracticeGroupsUsers = static::getPracticeGroupsUsersForUser( $user );
 
         if( !count( $myPracticeGroupsUsers ) ) {
             return false;
@@ -529,7 +591,7 @@ class PracticeGroups {
             return;
         }
 
-        $practiceGroupsUsers = PracticeGroupsUser::getAllForUser( $user->getId() );
+        $practiceGroupsUsers = static::getPracticeGroupsUsersForUser( $user );
 
         $practiceGroupNavItems = [];
         $discussionNavItems = [];

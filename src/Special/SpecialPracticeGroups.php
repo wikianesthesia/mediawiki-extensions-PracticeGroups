@@ -232,7 +232,7 @@ class SpecialPracticeGroups extends SpecialPage {
                 $buttons = '';
 
                 if( $this->getUser()->isRegistered()
-                    && !$practiceGroup->getPracticeGroupsUserForUser( $this->getUser()->getId() ) ) {
+                    && !$practiceGroup->getPracticeGroupsUserForUser( $this->getUser() ) ) {
                     if( $practiceGroup->canJoinByPublic() ) {
                         $buttons .= PracticeGroups::getMembershipButtonHtml( 'join', 0, $practiceGroup->getId() );
                     } elseif( $practiceGroup->canJoinByRequest()
@@ -296,7 +296,7 @@ class SpecialPracticeGroups extends SpecialPage {
 
         $linkRenderer = MediaWikiServices::getInstance()->getLinkRenderer();
 
-        $myPracticeGroupsUsers = PracticeGroupsUser::getAllForUser( $this->getUser()->getId() );
+        $myPracticeGroupsUsers = PracticeGroups::getPracticeGroupsUsersForUser( $this->getUser() );
 
         $html .= Html::element( 'h4', [], wfMessage( 'practicegroups-mypracticegroups' )->text() );
 
@@ -446,7 +446,7 @@ class SpecialPracticeGroups extends SpecialPage {
 
         if( !$this->getUser()->isRegistered() ) {
             $this->requireLogin();
-        } elseif( $practiceGroup->getPracticeGroupsUserForUser( $this->getUser()->getId() ) ) {
+        } elseif( $practiceGroup->getPracticeGroupsUserForUser( $this->getUser() ) ) {
             $errorHtml = BootstrapUI::alertWidget( [
                 'alertStyle' => BootstrapUI::ALERT_STYLE_DANGER
             ], wfMessage( 'practicegroups-form-joinrequest-error-existinguser' )->text() );

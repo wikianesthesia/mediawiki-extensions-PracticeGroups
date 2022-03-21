@@ -226,7 +226,7 @@ class PracticeGroupsPageSetting extends DatabaseClass {
             return $result;
         }
 
-        if( !$this->getPracticeGroup()->isUserAdmin( $myUser->getId() ) ) {
+        if( !$this->getPracticeGroup()->isUserAdmin( $myUser ) ) {
             $result->fatal( $genericErrorMessage );
 
             return $result;
