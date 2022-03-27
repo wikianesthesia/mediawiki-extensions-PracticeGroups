@@ -176,8 +176,35 @@ class PracticeGroups {
         return $privacy;
     }
 
+    /**
+     * @return string
+     */
     public static function getExtensionName(): string {
         return self::EXTENSION_NAME;
+    }
+
+    /**
+     * @param PracticeGroup $practiceGroup
+     * @param Title $mainArticleTitle
+     * @return Title[]
+     */
+    public static function getLinkedPracticeGroupArticleTitles( PracticeGroup $practiceGroup, Title $mainArticleTitle ): array {
+        $linkedPracticeGroupTitles = [];
+
+        if( $mainArticleTitle->exists() ) {
+            $relatedTitles = array_merge( [ $mainArticleTitle ], $mainArticleTitle->getRedirectsHere( NS_MAIN ) );
+
+            foreach( $relatedTitles as $relatedTitle ) {
+                $linkedPracticeGroupTitle = Title::newFromText(
+                    'PracticeGroup:' . $practiceGroup->getDBKey() . '/' . $relatedTitle->getDBkey() );
+
+                if( $linkedPracticeGroupTitle->exists() ) {
+                    $linkedPracticeGroupTitles[] = $linkedPracticeGroupTitle;
+                }
+            }
+        }
+
+        return $linkedPracticeGroupTitles;
     }
 
     /**
@@ -362,6 +389,28 @@ class PracticeGroups {
         }
 
         return wfMessage( 'practicegroups-articletitle', $titleText, $practiceGroup->getShortName() )->text();
+    }
+
+    public static function getPracticeGroupBadge( PracticeGroup $practiceGroup, string $class = 'practicegroups-searchresults-badge' ): string {
+        $badgeAttribs = [
+            'class' => $class,
+        ];
+
+        $badgeStyle = '';
+
+        if( $practiceGroup->getPrimaryColor() ) {
+            $badgeStyle .= 'background-color: ' . $practiceGroup->getPrimaryColor() . ';';
+        }
+
+        if( $practiceGroup->getSecondaryColor() ) {
+            $badgeStyle .= 'color: ' . $practiceGroup->getSecondaryColor() . ';';
+        }
+
+        if( $badgeStyle ) {
+            $badgeAttribs[ 'style' ] = $badgeStyle;
+        }
+
+        return BootstrapUI::badgeWidget( $badgeAttribs, $practiceGroup->getShortName() );
     }
 
     public static function getPracticeGroupFromTitle( $title ) {
@@ -603,22 +652,62 @@ class PracticeGroups {
 
             $practiceGroup = $practiceGroupsUser->getPracticeGroup();
 
-            $practiceGroupArticleTitle = Title::newFromText( 'PracticeGroup:' . $practiceGroup->getDBKey() . '/' . $mainArticleTitle->getText() );
-            $practiceGroupArticleLinkMessage = $practiceGroupArticleTitle->exists() ? 'practicegroups-practicegrouparticle-action' : 'practicegroups-practicegrouparticle-actioncreate';
-            $practiceGroupArticleLinkText = wfMessage( $practiceGroupArticleLinkMessage, $practiceGroup->getShortName() )->text();
+            // Get all possible linked practice group titles (the main article as well as any redirects)
+            $linkedPracticeGroupArticleTitles = static::getLinkedPracticeGroupArticleTitles( $practiceGroup, $mainArticleTitle );
 
-            $practiceGroupNavItems[] = [
-                'contents' => $practiceGroupArticleLinkText,
-                'href' => $practiceGroupArticleTitle->getLocalURL()
-            ];
+            if( !count( $linkedPracticeGroupArticleTitles ) ) {
+                $newPracticeGroupArticleTitle = Title::newFromText( 'PracticeGroup:' . $practiceGroup->getDBKey() . '/' . $mainArticleTitle->getDBkey() );
 
-            $practiceGroupArticleTalkTitle = $practiceGroupArticleTitle->getTalkPageIfDefined();
-            $practiceGroupArticleTalkLinkText = wfMessage( 'practicegroups-practicegrouptalk-action', $practiceGroup->getShortName() )->text();
+                $practiceGroupNavItems[] = [
+                    'href' => $newPracticeGroupArticleTitle->getLinkURL(),
+                    'contents' => wfMessage( 'practicegroups-practicegrouparticle-actioncreate', $practiceGroup->getShortName() )->text()
+                ];
 
-            $discussionNavItems[] = [
-                'contents' => $practiceGroupArticleTalkLinkText,
-                'href' => $practiceGroupArticleTalkTitle->getLocalURL()
-            ];
+                $newPracticeGroupArticleTalkTitle = $newPracticeGroupArticleTitle->getTalkPageIfDefined();
+
+                if( $newPracticeGroupArticleTalkTitle ) {
+                    $discussionNavItems[] = [
+                        'href' => $newPracticeGroupArticleTalkTitle->getLocalURL(),
+                        'contents' => wfMessage( 'practicegroups-practicegrouptalk-action', $practiceGroup->getShortName() )->text()
+                    ];
+                }
+            } elseif( count( $linkedPracticeGroupArticleTitles ) === 1 ) {
+                // Don't show the article title text if only one linked title
+                $practiceGroupArticleTitle = array_shift( $linkedPracticeGroupArticleTitles );
+
+                $practiceGroupNavItems[] = [
+                    'href' => $practiceGroupArticleTitle->getLinkURL(),
+                    'contents' => wfMessage( 'practicegroups-practicegrouparticle-action', $practiceGroup->getShortName() )->text()
+                ];
+
+                $practiceGroupArticleTalkTitle = $practiceGroupArticleTitle->getTalkPageIfDefined();
+
+                if( $practiceGroupArticleTalkTitle ) {
+                    $discussionNavItems[] = [
+                        'href' => $practiceGroupArticleTalkTitle->getLocalURL(),
+                        'contents' => wfMessage( 'practicegroups-practicegrouptalk-action', $practiceGroup->getShortName() )->text()
+                    ];
+                }
+            } else {
+                $practiceGroupBadgeHtml = static::getPracticeGroupBadge( $practiceGroup );
+
+                foreach( $linkedPracticeGroupArticleTitles as $linkedPracticeGroupArticleTitle ) {
+                    $mainArticleText = static::getMainArticleText( $linkedPracticeGroupArticleTitle );
+
+                    $practiceGroupNavItems[] = [
+                        'contents' => $practiceGroupBadgeHtml . $mainArticleText,
+                        'href' => $linkedPracticeGroupArticleTitle->getLinkURL()
+                    ];
+
+                    $linkedPracticeGroupArticleTalkTitle = $linkedPracticeGroupArticleTitle->getTalkPageIfDefined();
+
+                    $discussionNavItems[] = [
+                        'contents' => $practiceGroupBadgeHtml .
+                            wfMessage( 'practicegroups-practicegrouptalk-action', $mainArticleText )->text(),
+                        'href' => $linkedPracticeGroupArticleTalkTitle->getLinkURL()
+                    ];
+                }
+            }
         }
 
         if( empty( $practiceGroupNavItems ) ) {

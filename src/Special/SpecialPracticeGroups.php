@@ -303,7 +303,12 @@ class SpecialPracticeGroups extends SpecialPage {
         if( !$this->getUser()->isRegistered() ) {
             $html .= wfMessage(
                 'practicegroups-loginformypracticegroups',
-                $linkRenderer->makeLink( Title::newFromText( 'Special:UserLogin' ), wfMessage( 'practicegroups-login' )->text(), [], [ 'returnto' => $this->getPageTitle()->getFullText() ] )
+                $linkRenderer->makeLink(
+                    Title::newFromText( 'Special:UserLogin' ),
+                    wfMessage( 'practicegroups-login' )->text(),
+                    [],
+                    [ 'returnto' => $this->getPageTitle()->getFullText() ]
+                )
             )->text();
         } elseif( empty( $myPracticeGroupsUsers ) ) {
             $html .= wfMessage( 'practicegroups-nomypracticegroups' )->text();

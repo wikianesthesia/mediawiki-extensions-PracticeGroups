@@ -39,25 +39,7 @@ class ShowSearchHit {
                 $titleText = preg_replace( '/(' . preg_quote( $searchWord, '/' ) . ')/i', '<span class="searchmatch">$1</span>', $titleText );
             }
 
-            $badgeAttribs = [
-                'class' => 'practicegroups-searchhit-badge',
-            ];
-
-            $badgeStyle = '';
-
-            if( $practiceGroup->getPrimaryColor() ) {
-                $badgeStyle .= 'background-color: ' . $practiceGroup->getPrimaryColor() . ';';
-            }
-
-            if( $practiceGroup->getSecondaryColor() ) {
-                $badgeStyle .= 'color: ' . $practiceGroup->getSecondaryColor() . ';';
-            }
-
-            if( $badgeStyle ) {
-                $badgeAttribs[ 'style' ] = $badgeStyle;
-            }
-
-            $badgeHtml = BootstrapUI::badgeWidget( $badgeAttribs, $practiceGroup->getShortName() );
+            $badgeHtml = PracticeGroups::getPracticeGroupBadge( $practiceGroup, 'practicegroups-searchhit-badge' );
 
             $linkRenderer = MediaWikiServices::getInstance()->getLinkRenderer();
 
