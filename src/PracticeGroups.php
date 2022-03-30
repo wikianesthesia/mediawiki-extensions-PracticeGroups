@@ -643,7 +643,6 @@ class PracticeGroups {
         $practiceGroupsUsers = static::getPracticeGroupsUsersForUser( $user );
 
         $practiceGroupNavItems = [];
-        $discussionNavItems = [];
 
         foreach( $practiceGroupsUsers as $practiceGroupsUser ) {
             if( !$practiceGroupsUser->isActive() ) {
@@ -656,57 +655,16 @@ class PracticeGroups {
             $linkedPracticeGroupArticleTitles = static::getLinkedPracticeGroupArticleTitles( $practiceGroup, $mainArticleTitle );
 
             if( !count( $linkedPracticeGroupArticleTitles ) ) {
-                $newPracticeGroupArticleTitle = Title::newFromText( 'PracticeGroup:' . $practiceGroup->getDBKey() . '/' . $mainArticleTitle->getDBkey() );
+                $linkedPracticeGroupArticleTitles[] = Title::newFromText(
+                    'PracticeGroup:' . $practiceGroup->getDBKey() . '/' . $mainArticleTitle->getDBkey()
+                );
+            }
 
+            foreach( $linkedPracticeGroupArticleTitles as $linkedPracticeGroupArticleTitle ) {
                 $practiceGroupNavItems[] = [
-                    'href' => $newPracticeGroupArticleTitle->getLinkURL(),
-                    'contents' => wfMessage( 'practicegroups-practicegrouparticle-actioncreate', $practiceGroup->getShortName() )->text()
+                    'practiceGroup' => $practiceGroup,
+                    'title' => $linkedPracticeGroupArticleTitle
                 ];
-
-                $newPracticeGroupArticleTalkTitle = $newPracticeGroupArticleTitle->getTalkPageIfDefined();
-
-                if( $newPracticeGroupArticleTalkTitle ) {
-                    $discussionNavItems[] = [
-                        'href' => $newPracticeGroupArticleTalkTitle->getLocalURL(),
-                        'contents' => wfMessage( 'practicegroups-practicegrouptalk-action', $practiceGroup->getShortName() )->text()
-                    ];
-                }
-            } elseif( count( $linkedPracticeGroupArticleTitles ) === 1 ) {
-                // Don't show the article title text if only one linked title
-                $practiceGroupArticleTitle = array_shift( $linkedPracticeGroupArticleTitles );
-
-                $practiceGroupNavItems[] = [
-                    'href' => $practiceGroupArticleTitle->getLinkURL(),
-                    'contents' => wfMessage( 'practicegroups-practicegrouparticle-action', $practiceGroup->getShortName() )->text()
-                ];
-
-                $practiceGroupArticleTalkTitle = $practiceGroupArticleTitle->getTalkPageIfDefined();
-
-                if( $practiceGroupArticleTalkTitle ) {
-                    $discussionNavItems[] = [
-                        'href' => $practiceGroupArticleTalkTitle->getLocalURL(),
-                        'contents' => wfMessage( 'practicegroups-practicegrouptalk-action', $practiceGroup->getShortName() )->text()
-                    ];
-                }
-            } else {
-                $practiceGroupBadgeHtml = static::getPracticeGroupBadge( $practiceGroup );
-
-                foreach( $linkedPracticeGroupArticleTitles as $linkedPracticeGroupArticleTitle ) {
-                    $mainArticleText = static::getMainArticleText( $linkedPracticeGroupArticleTitle );
-
-                    $practiceGroupNavItems[] = [
-                        'contents' => $practiceGroupBadgeHtml . $mainArticleText,
-                        'href' => $linkedPracticeGroupArticleTitle->getLinkURL()
-                    ];
-
-                    $linkedPracticeGroupArticleTalkTitle = $linkedPracticeGroupArticleTitle->getTalkPageIfDefined();
-
-                    $discussionNavItems[] = [
-                        'contents' => $practiceGroupBadgeHtml .
-                            wfMessage( 'practicegroups-practicegrouptalk-action', $mainArticleText )->text(),
-                        'href' => $linkedPracticeGroupArticleTalkTitle->getLinkURL()
-                    ];
-                }
             }
         }
 
@@ -725,11 +683,16 @@ class PracticeGroups {
         $tabIcon = BootstrapUI::iconWidget( [ 'class' => 'fas fa-hospital-alt fa-fw' ] );
 
         if( count( $practiceGroupNavItems ) === 1 ) {
+            $linkMessage = $practiceGroupNavItems[ 0 ][ 'title' ]->exists() ?
+                'practicegroups-practicegrouparticle-action' :
+                'practicegroups-practicegrouparticle-actioncreate';
+
             $navItemAttribs[ 'contents' ] = $tabIcon . Html::rawElement( 'span', [
                     'class' => 'nav-label'
-                ], $practiceGroupNavItems[ 0 ][ 'contents' ] );
+                ], wfMessage( $linkMessage,
+                    $practiceGroupNavItems[ 0 ][ 'practiceGroup' ]->getShortName() )->text() );
 
-            $navItemAttribs[ 'href' ] = $practiceGroupNavItems[ 0 ][ 'href' ];
+            $navItemAttribs[ 'href' ] = $practiceGroupNavItems[ 0 ][ 'title' ]->getLinkURL();
 
             $navManager->addNavItem( $navId, $navItemAttribs );
         } else {
@@ -740,7 +703,18 @@ class PracticeGroups {
             $navManager->addNavItem( $navId, $navItemAttribs );
 
             foreach( $practiceGroupNavItems as $practiceGroupNavItem ) {
-                $navManager->addDropdownItem( $navId, $practiceGroupNavItem );
+                $mainArticleText = static::getMainArticleText( $practiceGroupNavItem[ 'title' ] );
+
+                $itemText = $practiceGroupNavItem[ 'title' ]->exists() ?
+                    $mainArticleText :
+                    wfMessage( 'practicegroups-practicegrouparticle-actioncreatetitle', $mainArticleText )->text();
+
+                $practiceGroupNavItemAttribs = [
+                    'contents' => static::getPracticeGroupBadge( $practiceGroupNavItem[ 'practiceGroup' ] ) . $itemText,
+                    'href' => $practiceGroupNavItem[ 'title' ]->getLinkURL()
+                ];
+
+                $navManager->addDropdownItem( $navId, $practiceGroupNavItemAttribs );
             }
         }
 
@@ -778,19 +752,28 @@ class PracticeGroups {
             $navManager->addNavItem( $navId, $navItem );
         }
 
-        if( !empty( $discussionNavItems ) ) {
-            $navId = 'discussion';
+        $navId = 'discussion';
 
-            $navItem = $navManager->getNavItem( $navId );
+        $navItem = $navManager->getNavItem( $navId );
 
-            if( !isset( $navItem[ 'dropdownItems' ] ) ) {
-                $navManager->addDropdownItem( $navId, [
-                    'href' => $navItem[ 'href' ]
-                ], wfMessage( 'practicegroups-maintalk', )->text() );
-            }
+        if( !isset( $navItem[ 'dropdownItems' ] ) ) {
+            $navManager->addDropdownItem( $navId, [
+                'href' => $navItem[ 'href' ]
+            ], wfMessage( 'practicegroups-maintalk', )->text() );
+        }
 
-            foreach( $discussionNavItems as $discussionNavItem ) {
-                $navManager->addDropdownItem( $navId, $discussionNavItem );
+        foreach( $practiceGroupNavItems as $practiceGroupNavItem ) {
+            if( $practiceGroupNavItem[ 'title' ]->exists() ) {
+                $practiceGroupTalkTitle = $practiceGroupNavItem[ 'title' ]->getTalkPageIfDefined();
+
+                $discussionNavItemAttribs = [
+                    'contents' => static::getPracticeGroupBadge( $practiceGroupNavItem[ 'practiceGroup' ] ) .
+                        wfMessage( 'practicegroups-practicegrouptalk-action',
+                            static::getMainArticleText( $practiceGroupNavItem[ 'title' ] ) )->text(),
+                    'href' => $practiceGroupTalkTitle->getLinkURL()
+                ];
+
+                $navManager->addDropdownItem( $navId, $discussionNavItemAttribs );
             }
         }
     }

@@ -225,6 +225,7 @@
   "practicegroups-practicegroupnamearticles": "$1 articles",
   "practicegroups-practicegrouparticle-action": "$1 article",
   "practicegroups-practicegrouparticle-actioncreate": "Create $1 article",
+  "practicegroups-practicegrouparticle-actioncreatetitle": "Create \"$1\"",
   "practicegroups-practicegrouptalk-action": "$1 discussion",
   "practicegroups-practicegroupuser": "Practice group user",
   "practicegroups-privacy-history-heading": "Page privacy history",
