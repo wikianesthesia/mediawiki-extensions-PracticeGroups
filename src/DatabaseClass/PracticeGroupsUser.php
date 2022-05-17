@@ -190,8 +190,12 @@ class PracticeGroupsUser extends DatabaseClass {
 
         $result = parent::delete( $test );
 
-        if( !$test && $userId === RequestContext::getMain()->getUser()->getId() ) {
-            PracticeGroups::purgeMyPracticeGroupsUsers();
+        if( !$test ) {
+            $practiceGroup->purgePracticeGroupsUsers();
+
+            if( $userId === RequestContext::getMain()->getUser()->getId() ) {
+                PracticeGroups::purgeMyPracticeGroupsUsers();
+            }
         }
 
         return $result;
@@ -970,34 +974,40 @@ class PracticeGroupsUser extends DatabaseClass {
         # before calling any post-save operations.
         $this->affiliatedEmailVerified = false;
 
-        if( !$test && $this->getUserId() === RequestContext::getMain()->getUser()->getId() ) {
-            PracticeGroups::purgeMyPracticeGroupsUsers();
+        if( !$test ) {
+            $practiceGroup->purgePracticeGroupsUsers();
+
+            if( $this->getUserId() === RequestContext::getMain()->getUser()->getId() ) {
+                PracticeGroups::purgeMyPracticeGroupsUsers();
+            }
         }
 
         if( !$result->isOK() ) {
             return $result;
         }
 
-        if( $action === 'create' ) {
-            if( $this->isInvited() ) {
-                $resultSendEmail = $this->sendInvitationEmail();
+        if( !$test ) {
+            if( $action === 'create' ) {
+                if( $this->isInvited() ) {
+                    $resultSendEmail = $this->sendInvitationEmail();
 
-                if( !$resultSendEmail->isOK() ) {
-                    $result->merge( $resultSendEmail );
-                    return $result;
-                }
-            } elseif( $this->isAwaitingEmailVerification() ) {
-                $resultSendEmail = $this->sendVerificationEmail();
+                    if( !$resultSendEmail->isOK() ) {
+                        $result->merge( $resultSendEmail );
+                        return $result;
+                    }
+                } elseif( $this->isAwaitingEmailVerification() ) {
+                    $resultSendEmail = $this->sendVerificationEmail();
 
-                if( !$resultSendEmail->isOK() ) {
-                    $result->merge( $resultSendEmail );
-                    return $resultSendEmail;
+                    if( !$resultSendEmail->isOK() ) {
+                        $result->merge( $resultSendEmail );
+                        return $resultSendEmail;
+                    }
                 }
             }
-        }
 
-        if( $practiceGroupUserActivating ) {
-            Hooks::run( 'PracticeGroupsUserActivated', [ $this ] );
+            if( $practiceGroupUserActivating ) {
+                Hooks::run( 'PracticeGroupsUserActivated', [ $this ] );
+            }
         }
 
         return $result;

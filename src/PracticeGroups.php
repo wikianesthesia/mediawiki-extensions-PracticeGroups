@@ -414,16 +414,12 @@ class PracticeGroups {
     }
 
     public static function getPracticeGroupFromTitle( $title ) {
-        if( !$title ) {
+        if( !static::isTitlePracticeGroupArticle( $title ) ) {
             return false;
         }
 
         if( !$title instanceof Title ) {
             $title = Title::newFromText( $title );
-        }
-
-        if( !in_array( $title->getNamespace(), static::NAMESPACES ) ) {
-            return false;
         }
 
         $titleText = $title->getText();
@@ -539,7 +535,7 @@ class PracticeGroups {
         }
     }
 
-    public static function isTitlePracticeGroupArticle( $title ) {
+    public static function isTitlePracticeGroupArticle( $title ): bool {
         if( !$title ) {
             return false;
         }

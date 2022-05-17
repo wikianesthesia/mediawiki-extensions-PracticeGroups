@@ -9,6 +9,7 @@ use PracticeGroups\PracticeGroups;
 use RequestContext;
 use Status;
 use Title;
+use TitleArray;
 use User;
 
 class PracticeGroup extends DatabaseClass {
@@ -118,6 +119,23 @@ class PracticeGroup extends DatabaseClass {
             [ 'name_full' ],
             [ 'name_short' ]
         ]
+    ];
+
+    protected const CACHE_KEY_ARTICLES = 'PracticeGroups\PracticeGroupArticles';
+
+    protected const CACHE_KEY_USERS_ALL = 'PracticeGroups\PracticeGroupsUsersAll';
+    protected const CACHE_KEY_USERS_ACTIVE = 'PracticeGroups\PracticeGroupsUsersActive';
+    protected const CACHE_KEY_USERS_ADMIN = 'PracticeGroups\PracticeGroupsUsersAdmin';
+    protected const CACHE_KEY_USERS_INVITED = 'PracticeGroups\PracticeGroupsUsersInvited';
+    protected const CACHE_KEY_USERS_PENDING = 'PracticeGroups\PracticeGroupsUsersPending';
+    protected const CACHE_KEY_USERS_REQUESTED = 'PracticeGroups\PracticeGroupsUsersRequested';
+
+    protected const CACHE_KEYS_USERS = [
+        self::CACHE_KEY_USERS_ACTIVE,
+        self::CACHE_KEY_USERS_ADMIN,
+        self::CACHE_KEY_USERS_INVITED,
+        self::CACHE_KEY_USERS_PENDING,
+        self::CACHE_KEY_USERS_REQUESTED
     ];
 
     /**
@@ -292,6 +310,8 @@ class PracticeGroup extends DatabaseClass {
         $result = parent::delete( $test );
 
         if( !$test ) {
+            $this->purgePracticeGroupsUsers();
+
             // Purge regardless of whether the user is a member
             PracticeGroups::purgeMyPracticeGroupsUsers();
         }
@@ -303,23 +323,27 @@ class PracticeGroup extends DatabaseClass {
      * @return PracticeGroupsUser[]|false
      */
     public function getActivePracticeGroupsUsers() {
-        return static::sortPracticeGroupsUsers(
-            PracticeGroupsUser::getAll( [
-                'practicegroup_id' => $this->getValue( 'practicegroup_id' ),
-                'active_since > 0'
-            ] ) );
+        return $this->getPracticeGroupsUsers( self::CACHE_KEY_USERS_ACTIVE, function( PracticeGroup $practiceGroup ) {
+            return static::sortPracticeGroupsUsers(
+                PracticeGroupsUser::getAll( [
+                    'practicegroup_id' => $practiceGroup->getValue( 'practicegroup_id' ),
+                    'active_since > 0'
+                ] ) );
+        } );
     }
 
     /**
      * @return PracticeGroupsUser[]|false
      */
     public function getAdminPracticeGroupsUsers() {
-        return static::sortPracticeGroupsUsers(
-            PracticeGroupsUser::getAll( [
-                'practicegroup_id' => $this->getValue( 'practicegroup_id' ),
-                'active_since > 0',
-                'admin > 0'
-            ] ) );
+        return $this->getPracticeGroupsUsers( self::CACHE_KEY_USERS_ADMIN, function( PracticeGroup $practiceGroup ) {
+            return static::sortPracticeGroupsUsers(
+                PracticeGroupsUser::getAll( [
+                    'practicegroup_id' => $practiceGroup->getValue( 'practicegroup_id' ),
+                    'active_since > 0',
+                    'admin > 0'
+                ] ) );
+        } );
     }
 
     /**
@@ -333,19 +357,43 @@ class PracticeGroup extends DatabaseClass {
      * @return PracticeGroupsUser[]|false
      */
     public function getAllPracticeGroupsUsers() {
-        $allPracticeGroupsUsers = static::getObjectsForIds( PracticeGroupsUser::class, $this->getValue( 'practiceGroupsUserIds' ) );
-
-        return static::sortPracticeGroupsUsers( $allPracticeGroupsUsers );
+        return $this->getPracticeGroupsUsers( self::CACHE_KEY_USERS_ALL, function( PracticeGroup $practiceGroup ) {
+            return static::sortPracticeGroupsUsers(
+                static::getObjectsForIds(
+                    PracticeGroupsUser::class,
+                    $practiceGroup->getValue( 'practiceGroupsUserIds' )
+                ) );
+        } );
     }
 
+    /**
+     * @return array|TitleArray
+     */
     public function getArticles() {
-        $dbKey = $this->getDBKey();
+        global $wgDatabaseClassesCacheTTL;
 
-        if( !$dbKey ) {
-            return false;
-        }
+        $cache = MediaWikiServices::getInstance()->getMainWANObjectCache();
 
-        return $this->getDashboardTitle()->getSubpages();
+        $practiceGroup = $this;
+
+        $callback = function( $oldValue, &$ttl, array &$setOpts ) use ( $practiceGroup ) {
+            $titles = [];
+
+            $dashboardTitle = $practiceGroup->getDashboardTitle();
+            if( $dashboardTitle ) {
+                foreach( $dashboardTitle->getSubpages() as $title ) {
+                    $titles[] = $title;
+                }
+            }
+
+            return $titles;
+        };
+
+        return $cache->getWithSetCallback(
+            $cache->makeKey( self::CACHE_KEY_ARTICLES, $this->getValue( 'practicegroup_id' ) ),
+            $wgDatabaseClassesCacheTTL,
+            $callback
+        );
     }
 
     /**
@@ -433,23 +481,27 @@ class PracticeGroup extends DatabaseClass {
      * @return PracticeGroupsUser[]|false
      */
     public function getInvitedPracticeGroupsUsers() {
-        return static::sortPracticeGroupsUsers(
-            PracticeGroupsUser::getAll( [
-                'practicegroup_id' => $this->getValue( 'practicegroup_id' ),
-                'active_since' => 0,
-                'invited_since > 0'
-        ] ) );
+        return $this->getPracticeGroupsUsers( self::CACHE_KEY_USERS_INVITED, function( PracticeGroup $practiceGroup ) {
+            return static::sortPracticeGroupsUsers(
+                PracticeGroupsUser::getAll( [
+                    'practicegroup_id' => $practiceGroup->getValue( 'practicegroup_id' ),
+                    'active_since' => 0,
+                    'invited_since > 0'
+                ] ) );
+        } );
     }
 
     /**
      * @return PracticeGroupsUser[]|false
      */
     public function getPendingPracticeGroupsUsers() {
-        return static::sortPracticeGroupsUsers(
-            PracticeGroupsUser::getAll( [
-                'practicegroup_id' => $this->getValue( 'practicegroup_id' ),
-                'active_since' => 0
-        ] ) );
+        return $this->getPracticeGroupsUsers( self::CACHE_KEY_USERS_PENDING, function( PracticeGroup $practiceGroup ) {
+            return static::sortPracticeGroupsUsers(
+                PracticeGroupsUser::getAll( [
+                    'practicegroup_id' => $practiceGroup->getValue( 'practicegroup_id' ),
+                    'active_since' => 0
+                ] ) );
+        } );
     }
 
     /**
@@ -481,12 +533,14 @@ class PracticeGroup extends DatabaseClass {
      * @return PracticeGroupsUser[]|false
      */
     public function getRequestedPracticeGroupsUsers() {
-        return static::sortPracticeGroupsUsers(
-            PracticeGroupsUser::getAll( [
-                'practicegroup_id' => $this->getValue( 'practicegroup_id' ),
-                'active_since' => 0,
-                'requested_since > 0'
-        ] ) );
+        return $this->getPracticeGroupsUsers( self::CACHE_KEY_USERS_REQUESTED, function( PracticeGroup $practiceGroup ) {
+            return static::sortPracticeGroupsUsers(
+                PracticeGroupsUser::getAll( [
+                    'practicegroup_id' => $this->getValue( 'practicegroup_id' ),
+                    'active_since' => 0,
+                    'requested_since > 0'
+                ] ) );
+        } );
     }
 
     public function hasRight( string $action ): Status {
@@ -599,6 +653,20 @@ class PracticeGroup extends DatabaseClass {
         return (bool) $this->getValue( 'preserve_main_title_links' );
     }
 
+    public function purgeArticles(): void {
+        $cache = MediaWikiServices::getInstance()->getMainWANObjectCache();
+
+        $cache->delete( $cache->makeKey( self::CACHE_KEY_ARTICLES, $this->getValue( 'practicegroup_id' ) ) );
+    }
+
+    public function purgePracticeGroupsUsers(): void {
+        $cache = MediaWikiServices::getInstance()->getMainWANObjectCache();
+
+        foreach( self::CACHE_KEYS_USERS as $cacheKey ) {
+            $cache->delete( $cache->makeKey( $cacheKey, $this->getValue( 'practicegroup_id' ) ) );
+        }
+    }
+
     public function save( bool $test = false ): Status {
         $result = parent::save( $test );
         $resultValue = $result->getValue();
@@ -630,6 +698,8 @@ class PracticeGroup extends DatabaseClass {
 
                 PracticeGroups::purgeMyPracticeGroupsUsers();
             }
+
+            $this->purgePracticeGroupsUsers();
 
             if( $resultValue[ 'action' ] === static::ACTION_CREATE ) {
                 Hooks::run( 'PracticeGroupCreated', [ $this ] );
@@ -674,6 +744,25 @@ class PracticeGroup extends DatabaseClass {
         return $this->canViewByPublic() ||
             $this->isUserActiveMember( $user ) ||
             PracticeGroups::isUserPracticeGroupSysop( $user );
+    }
+
+    /**
+     * @return PracticeGroupsUser[]|false
+     */
+    protected function getPracticeGroupsUsers( string $cacheKey, callable $callback ) {
+        global $wgDatabaseClassesCacheTTL;
+
+        $cache = MediaWikiServices::getInstance()->getMainWANObjectCache();
+
+        $cacheCallback = function( $oldValue, &$ttl, array &$setOpts ) use ( $callback ) {
+            return $callback( $this );
+        };
+
+        return $cache->getWithSetCallback(
+            $cache->makeKey( $cacheKey, $this->getValue( 'practicegroup_id' ) ),
+            $wgDatabaseClassesCacheTTL,
+            $cacheCallback
+        );
     }
 
     protected static function sortPracticeGroupsUsers( array $practiceGroupsUsers = [] ) {

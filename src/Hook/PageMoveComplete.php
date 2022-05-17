@@ -13,11 +13,28 @@ use Title;
 
 class PageMoveComplete {
     public static function callback( LinkTarget $old, LinkTarget $new, UserIdentity $userIdentity, int $pageid, int $redirid, string $reason, RevisionRecord $revision  ) {
+        // Purge the cache of articles for the old and/or new titles if either is a practice group article
+        $oldPracticeGroup = null;
+
         if( in_array( $old->getNamespace(), PracticeGroups::getPracticeGroupsNamespaces() ) ) {
-            # TODO will eventually need to deal with renaming practice groups
-            # Prevent infinite recursion
-            return;
-        } elseif( $old->getNamespace() !== NS_MAIN || $new->getNamespace() !== NS_MAIN ) {
+            $oldPracticeGroup = PracticeGroups::getPracticeGroupFromTitle( Title::newFromLinkTarget( $old ) );
+
+            if( $oldPracticeGroup ) {
+                $oldPracticeGroup->purgeArticles();
+            }
+        }
+
+        if( in_array( $new->getNamespace(), PracticeGroups::getPracticeGroupsNamespaces() ) ) {
+            $newPracticeGroup = PracticeGroups::getPracticeGroupFromTitle( Title::newFromLinkTarget( $new ) );
+
+            if( $newPracticeGroup && ( !$oldPracticeGroup || $oldPracticeGroup->getId() !== $newPracticeGroup->getId() ) ) {
+                $newPracticeGroup->purgeArticles();
+            }
+        }
+
+        // If both the old and new titles are in the main namespace, may need to move practice group articles to
+        // preserve linkages with the article title from the main namespace
+        if( $old->getNamespace() !== NS_MAIN || $new->getNamespace() !== NS_MAIN ) {
             return;
         }
 
