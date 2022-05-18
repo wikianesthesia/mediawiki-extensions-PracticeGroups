@@ -37,13 +37,13 @@ class MovePageIsValidMove {
 
                 $user = RequestContext::getMain()->getUser();
 
-                $oldPracticeGroupsUser = PracticeGroups::getPracticeGroupsUserForUser(
-                    PracticeGroup::getFromDBKey( $oldTitle->getRootText() ), $user
-                );
+                $oldPracticeGroup = PracticeGroup::getFromDBKey( $oldTitle->getRootText() );
+                $oldPracticeGroupsUser = $oldPracticeGroup ?
+                    PracticeGroups::getPracticeGroupsUserForUser( $oldPracticeGroup, $user ) : null;
 
-                $newPracticeGroupsUser = PracticeGroups::getPracticeGroupsUserForUser(
-                    PracticeGroup::getFromDBKey( $newTitle->getRootText() ), $user
-                );
+                $newPracticeGroup = PracticeGroup::getFromDBKey( $newTitle->getRootText() );
+                $newPracticeGroupsUser = $newPracticeGroup ?
+                    PracticeGroups::getPracticeGroupsUserForUser( $newPracticeGroup, $user ) : null;
 
                 if( !$oldPracticeGroupsUser
                     || !$oldPracticeGroupsUser->isAdmin()
