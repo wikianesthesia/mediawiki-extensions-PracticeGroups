@@ -367,9 +367,9 @@ class PracticeGroup extends DatabaseClass {
     }
 
     /**
-     * @return array|TitleArray
+     * @return Title[]
      */
-    public function getArticles() {
+    public function getArticles(): array {
         global $wgDatabaseClassesCacheTTL;
 
         $cache = MediaWikiServices::getInstance()->getMainWANObjectCache();
@@ -668,6 +668,10 @@ class PracticeGroup extends DatabaseClass {
     }
 
     public function save( bool $test = false ): Status {
+        if( !$this->getValue( 'join_by_affiliated_email' ) ) {
+            $this->setValue( 'affiliated_domains', '' );
+        }
+
         $result = parent::save( $test );
         $resultValue = $result->getValue();
 
