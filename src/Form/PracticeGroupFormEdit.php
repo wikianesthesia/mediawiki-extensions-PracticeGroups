@@ -6,6 +6,7 @@ namespace PracticeGroups\Form;
 use BootstrapUI\BootstrapUI;
 use Html;
 use PracticeGroups\DatabaseClass\PracticeGroup;
+use PracticeGroups\PracticeGroups;
 use RequestContext;
 
 class PracticeGroupFormEdit extends PracticeGroupForm {
@@ -41,7 +42,7 @@ class PracticeGroupFormEdit extends PracticeGroupForm {
                 return $html;
             }
 
-            if( !$myPracticeGroupsUser->isAdmin() ) {
+            if( !$myPracticeGroupsUser->isAdmin() && !PracticeGroups::isUserPracticeGroupSysop( $user ) ) {
                 $readOnly = true;
             }
         }
