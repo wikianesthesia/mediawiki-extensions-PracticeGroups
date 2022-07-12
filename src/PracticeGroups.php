@@ -109,19 +109,23 @@ class PracticeGroups {
      */
     public static function getAllAllowedPracticeGroups() {
         if( !isset( static::$allowedPracticeGroups ) ) {
-            $allowedPracticeGroups = static::getAllPublicPracticeGroups();
-
             $user = RequestContext::getMain()->getUser();
 
-            if( $user->isRegistered() ) {
-                $practiceGroupsUsers = static::getPracticeGroupsUsersForUser( $user );;
+            if( static::isUserPracticeGroupSysop( $user ) ) {
+                $allowedPracticeGroups = PracticeGroup::getAll();
+            } else {
+                $allowedPracticeGroups = static::getAllPublicPracticeGroups();
 
-                foreach( $practiceGroupsUsers as $practiceGroupsUser ) {
-                    $practiceGroup = $practiceGroupsUser->getPracticeGroup();
+                if( $user->isRegistered() ) {
+                    $practiceGroupsUsers = static::getPracticeGroupsUsersForUser( $user );;
 
-                    if( !array_key_exists( $practiceGroup->getId(), $allowedPracticeGroups ) &&
-                        $practiceGroupsUser->isActive() ) {
-                        $allowedPracticeGroups[ $practiceGroup->getId() ] = $practiceGroup;
+                    foreach( $practiceGroupsUsers as $practiceGroupsUser ) {
+                        $practiceGroup = $practiceGroupsUser->getPracticeGroup();
+
+                        if( !array_key_exists( $practiceGroup->getId(), $allowedPracticeGroups ) &&
+                            $practiceGroupsUser->isActive() ) {
+                            $allowedPracticeGroups[ $practiceGroup->getId() ] = $practiceGroup;
+                        }
                     }
                 }
             }

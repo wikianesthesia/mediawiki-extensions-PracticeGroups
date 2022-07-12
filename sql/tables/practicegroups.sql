@@ -3,6 +3,7 @@ CREATE TABLE /*_*/practicegroups (
   `dbkey` VARCHAR(25) NOT NULL,
   `name_full` VARCHAR(100) NOT NULL,
   `name_short` VARCHAR(25) NOT NULL,
+  `registration` INT(10) UNSIGNED NOT NULL DEFAULT 0,
   `color_primary` VARCHAR(25) NULL,
   `color_secondary` VARCHAR(25) NULL,
   `preserve_main_title_links` TINYINT(1) NOT NULL DEFAULT 1,

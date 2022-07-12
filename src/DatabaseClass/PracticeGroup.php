@@ -27,6 +27,11 @@ class PracticeGroup extends DatabaseClass {
             'type' => DatabaseClass::TYPE_STRING,
             'validator' => self::class . '::isValidDBKey'
         ], [
+            'name' => 'registration',
+            'defaultValue' => 0,
+            'source' => DatabaseClass::SOURCE_FIELD,
+            'type' => DatabaseClass::TYPE_UNSIGNED_INTEGER
+        ], [
             'name' => 'name_full',
             'required' => true,
             'size' => 100,
@@ -464,6 +469,13 @@ class PracticeGroup extends DatabaseClass {
     }
 
     /**
+     * @return int
+     */
+    public function getRegistration(): string {
+        return (int) $this->getValue( 'registration' );
+    }
+
+    /**
      * @return string
      */
     public function getSecondaryColor(): string {
@@ -672,6 +684,10 @@ class PracticeGroup extends DatabaseClass {
             $this->setValue( 'affiliated_domains', '' );
         }
 
+        if( !$this->exists() ) {
+            $this->setValue( 'registration', time() );
+        }
+
         $result = parent::save( $test );
         $resultValue = $result->getValue();
 
@@ -706,6 +722,8 @@ class PracticeGroup extends DatabaseClass {
             $this->purgePracticeGroupsUsers();
 
             if( $resultValue[ 'action' ] === static::ACTION_CREATE ) {
+                // TODO add log entry
+
                 Hooks::run( 'PracticeGroupCreated', [ $this ] );
             }
         }
