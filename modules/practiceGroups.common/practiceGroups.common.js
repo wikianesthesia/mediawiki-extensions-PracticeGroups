@@ -238,7 +238,7 @@
             new mw.Api().postWithEditToken( apiParams ).then( function( result ) {
                 callback( buttonId, result.practicegroups[ pgaction ] );
             } ).fail( function(a, b, c) {
-                console.log( b );
+                console.log( JSON.stringify( b ) );
                 mw.practiceGroups.common.showAlert( mw.msg( 'practicegroups-error-generic' ), 'danger' );
             } );
         },
@@ -286,7 +286,6 @@
                 } else if( errorData.error == mw.practiceGroups.common.validationErrorFailedValidation ) {
                     $( '#' + fieldId + '-invalid-feedback' ).html( mw.msg( 'practicegroups-error-failedvalidation' ) );
                 } else if( errorData.error == mw.practiceGroups.common.validationErrorNotUnique ) {
-                    console.log('woo');
                     $( '#' + fieldId + '-invalid-feedback' ).html( mw.msg( 'practicegroups-error-notunique',
                         fieldSelector.parent().children().first().text().toLowerCase() ) );
                 } else if( errorData.error == mw.practiceGroups.common.validationErrorRequiredMissing ) {

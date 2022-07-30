@@ -336,6 +336,14 @@ class PracticeGroupFormEdit extends PracticeGroupForm {
             'containerClass' => $radioContainerSpacingClass . ' collapse'
         ] );
 
+        if( !$practiceGroup ) {
+            $name = 'save';
+
+            $html .= Html::rawElement( 'div', [
+                'class' => 'mb-3'
+            ], static::getMessageParse( $name, 'disclaimer' ) );
+        }
+
         $html .= Html::openElement( 'div', [
             'class' => 'mb-3'
         ] );
@@ -343,7 +351,7 @@ class PracticeGroupFormEdit extends PracticeGroupForm {
         if( !$readOnly ) {
             $name = 'save';
             $elementId = static::getElementIdForName( $name );
-            $labelText = $practiceGroup ? static::getMessageText( $name, 'label' ) : wfMessage( 'practicegroups-create' )->text();
+            $labelText = $practiceGroup ? static::getMessageText( $name, 'save' ) : static::getMessageText( $name, 'create' );
             $html .= BootstrapUI::buttonWidget( [
                 'id' => $elementId,
                 'label' => $labelText

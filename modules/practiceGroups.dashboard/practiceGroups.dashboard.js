@@ -605,7 +605,7 @@
                         confirmSendInvites( emails, validUsernames );
                     }
                 } ).fail( function( a, b, c ) {
-                    console.log( b );
+                    console.log( JSON.stringify( b ) );
                 } );
             } else {
                 confirmSendInvites( emails, [] );

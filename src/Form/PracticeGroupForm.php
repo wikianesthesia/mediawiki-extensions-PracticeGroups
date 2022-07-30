@@ -40,6 +40,25 @@ abstract class PracticeGroupForm {
      * @param mixed ...$msgParams
      * @return string
      */
+    protected static function getMessageParse( string $name, string $subElement = '', ...$msgParams ): string {
+        $elementId = static::getElementIdForName( $name, $subElement );
+
+        if( !$elementId ) {
+            return '';
+        }
+
+        $msgKey = 'practicegroups-' . $elementId;
+
+        return wfMessage( $msgKey, $msgParams )->parse();
+    }
+
+
+    /**
+     * @param string $name
+     * @param string $subElement
+     * @param mixed ...$msgParams
+     * @return string
+     */
     protected static function getMessageText( string $name, string $subElement = '', ...$msgParams ): string {
         $elementId = static::getElementIdForName( $name, $subElement );
 

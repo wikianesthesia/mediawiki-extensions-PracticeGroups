@@ -63,11 +63,11 @@
                             if( result.practicegroups[ pgaction ].status === 'ok' ) {
                                 location.href = mw.Title.newFromText( 'Special:PracticeGroups' ).getUrl();
                             } else {
-                                console.log(result);
+                                console.log( JSON.stringify( result ) );
                                 mw.practiceGroups.common.showAlert( result.practicegroups[ pgaction ].message, 'danger' );
                             }
                         } ).fail( function(a, b, c) {
-                            console.log( b );
+                            console.log( JSON.stringify( b ) );
                             mw.practiceGroups.common.showAlert( mw.msg( 'practicegroups-error-generic' ), 'danger' );
                         } );
                     }
