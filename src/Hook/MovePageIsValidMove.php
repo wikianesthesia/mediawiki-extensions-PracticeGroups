@@ -13,8 +13,8 @@ class MovePageIsValidMove {
         if( in_array( $oldTitle->getNamespace(), PracticeGroups::getPracticeGroupsNamespaces() ) ) {
             # The old title is in one of the practicegroups namespaces.
 
-            if( $oldTitle->getNamespace() !== $newTitle->getNamespace() ) {
-                # Practicegroups pages cannot change namespaces once created
+            if( $oldTitle->getNamespace() !== $newTitle->getNamespace() && !PracticeGroups::isUserPracticeGroupSysop() ) {
+                # Practicegroups pages cannot change namespaces once created unless the user is a practice groups sysop
 
                 $status->fatal( wfMessage( 'practicegroups-error-move-fromnamespace', $oldTitle->getNsText() ) );
             } elseif( !$oldTitle->isSubpage() ) {
@@ -56,8 +56,10 @@ class MovePageIsValidMove {
         } else {
             # The old title is not in one of the practicegroups namespaces
 
-            if( in_array( $newTitle->getNamespace(), PracticeGroups::getPracticeGroupsNamespaces() ) ) {
-                # Pages from non-practicegroups namespaces cannot be moved into a practicegroups namespace
+            if( in_array( $newTitle->getNamespace(), PracticeGroups::getPracticeGroupsNamespaces() )
+                && !PracticeGroups::isUserPracticeGroupSysop() ) {
+                # Pages from non-practicegroups namespaces cannot be moved into a practicegroups namespace unless the
+                # user is a practice groups sysop
 
                 $status->fatal( wfMessage( 'practicegroups-error-move-tonamespace', $newTitle->getNsText() ) );
             }
