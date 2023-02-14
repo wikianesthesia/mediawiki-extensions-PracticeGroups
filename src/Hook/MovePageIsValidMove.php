@@ -59,7 +59,8 @@ class MovePageIsValidMove {
             if( in_array( $newTitle->getNamespace(), PracticeGroups::getPracticeGroupsNamespaces() )
                 && ( !$newTitle->isSubpage() || !PracticeGroups::isUserPracticeGroupSysop() ) ) {
                 # Pages from non-practicegroups namespaces cannot be moved into a practicegroups namespace unless the
-                # user is a practice groups sysop
+                # new title is a subpage (i.e. not creating an orphaned practice group) and the user is a
+                # practice groups sysop
 
                 $status->fatal( wfMessage( 'practicegroups-error-move-tonamespace', $newTitle->getNsText() ) );
             }
