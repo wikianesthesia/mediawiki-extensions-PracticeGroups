@@ -57,7 +57,7 @@ class MovePageIsValidMove {
             # The old title is not in one of the practicegroups namespaces
 
             if( in_array( $newTitle->getNamespace(), PracticeGroups::getPracticeGroupsNamespaces() )
-                && !PracticeGroups::isUserPracticeGroupSysop() ) {
+                && ( !$newTitle->isSubpage() || !PracticeGroups::isUserPracticeGroupSysop() ) ) {
                 # Pages from non-practicegroups namespaces cannot be moved into a practicegroups namespace unless the
                 # user is a practice groups sysop
 
